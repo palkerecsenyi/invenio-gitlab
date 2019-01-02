@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2018 HZDR
+# Copyright (C) 2019 HZDR
 #
 # This file is part of RODARE.
 #
@@ -17,29 +17,16 @@
 # You should have received a copy of the GNU General Public License
 # along with Rodare. If not, see <http://www.gnu.org/licenses/>.
 
-"""Module tests."""
-
-from __future__ import absolute_import, print_function
-
-from flask import Flask
-
-from invenio_gitlab import InvenioGitLab
+"""Invenio-GitLab errors."""
 
 
-def test_version():
-    """Test version import."""
-    from invenio_gitlab import __version__
-    assert __version__
+class GitLabError(Exception):
+    """General GitLab error."""
 
 
-def test_init():
-    """Test extension initialization."""
-    app = Flask('testapp')
-    ext = InvenioGitLab(app)
-    assert 'invenio-gitlab' in app.extensions
+class RepositoryAccessError(GitLabError):
+    """Repository access permissions error."""
 
-    app = Flask('testapp')
-    ext = InvenioGitLab()
-    assert 'invenio-gitlab' not in app.extensions
-    ext.init_app(app)
-    assert 'invenio-gitlab' in app.extensions
+
+class InvalidRegexError(GitLabError):
+    """Invalid regular expression error."""

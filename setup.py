@@ -34,7 +34,7 @@ tests_require = [
     'pytest-cache>=1.0',
     'pytest-cov>=1.8.0',
     'pytest-pep8>=1.0.6',
-    'pytest>=2.8.0',
+    'pytest>=3.7.0',
 ]
 
 extras_require = {
@@ -64,6 +64,7 @@ setup_requires = [
 
 install_requires = [
     'Flask-BabelEx>=0.9.2',
+    'invenio-accounts>=1.0.0',
 ]
 
 packages = find_packages()
@@ -95,6 +96,9 @@ setup(
         ],
         'invenio_i18n.translations': [
             'messages = invenio_gitlab',
+        ],
+        'invenio_db.models': [
+            'invenio_gitlab = invenio_gitlab.models',
         ],
     },
     extras_require=extras_require,
