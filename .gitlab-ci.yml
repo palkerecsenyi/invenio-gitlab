@@ -1,0 +1,61 @@
+# -*- coding: utf-8 -*-
+#
+# Copyright (C) 2018 HZDR
+#
+# This file is part of RODARE.
+#
+# invenio-gitlab is free software: you can redistribute it
+# and/or modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation, either version 3 of the License,
+# or (at your option) any later version.
+#
+# invenio-gitlab is distributed in the hope that
+# it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+# warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Rodare. If not, see <http://www.gnu.org/licenses/>.
+
+
+variables:
+  PIP_CACHE_DIR: $CI_PROJECT_DIR/.pip-cache
+
+cache:
+  paths:
+    - $CI_PROJECT_DIR/.pip-cache
+
+before_script:
+  - curl -sL https://deb.nodesource.com/setup_6.x | bash -
+  - apt-get -qy install --fix-missing --no-install-recommends nodejs
+  - pip install --upgrade pip setuptools py
+  - pip install twine wheel coveralls requirements-builder
+  - requirements-builder -e all --level=min setup.py > .ci-min-requirements.txt
+  - requirements-builder -e all --level=pypi setup.py > .ci-pypi-requirements.txt
+  - requirements-builder -e all --level=dev --req requirements-devel.txt setup.py > .ci-devel-requirements.txt
+  - pip install -r .ci-$REQUIREMENTS-requirements.txt
+  - pip install -e .[$EXTRAS]
+
+py3.5-min:
+  image: python:3.6
+  variables:
+    EXTRAS: all
+    REQUIREMENTS: min
+  script:
+    - ./run-tests.sh
+  
+py3.5-pypi:
+  image: python:3.6
+  variables:
+    EXTRAS: all
+    REQUIREMENTS: pypi
+  script:
+    - ./run-tests.sh
+
+py3.5-devel:
+  image: python:3.6
+  variables:
+    EXTRAS: all
+    REQUIREMENTS: devel
+  script:
+    - ./run-tests.sh
