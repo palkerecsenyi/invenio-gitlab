@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2018 HZDR
+# Copyright (C) 2019 HZDR
 #
 # This file is part of RODARE.
 #
@@ -21,12 +21,18 @@
 
 from __future__ import absolute_import, print_function
 
+import os
 import shutil
 import tempfile
 
 import pytest
 from flask import Flask
 from flask_babelex import Babel
+from invenio_db import InvenioDB
+from invenio_db import db as db_
+from sqlalchemy_utils.functions import create_database, database_exists
+
+from invenio_gitlab import InvenioGitLab
 
 
 @pytest.yield_fixture()
@@ -42,15 +48,30 @@ def base_app(instance_path):
     """Flask application fixture."""
     app_ = Flask('testapp', instance_path=instance_path)
     app_.config.update(
+        SQLALCHEMY_TRACK_MODIFICATIONS=False,
+        SQLALCHEMY_DATABASE_URI=os.getenv('SQLALCHEMY_DATABASE_URI',
+                                          'sqlite://'),
         SECRET_KEY='SECRET_KEY',
         TESTING=True,
     )
-    Babel(app_)
+    InvenioDB(app_)
+
     return app_
 
 
-@pytest.yield_fixture()
+@pytest.fixture()
 def app(base_app):
     """Flask application fixture."""
+    InvenioGitLab(base_app)
     with base_app.app_context():
         yield base_app
+
+
+@pytest.fixture()
+def db(app):
+    """Get setup database."""
+    if not database_exists(str(db_.engine.url)):
+        create_database(str(db_.engine.url))
+    db_.create_all()
+    yield db_
+    db_.session.remove()

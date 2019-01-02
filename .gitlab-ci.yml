@@ -17,45 +17,122 @@
 # You should have received a copy of the GNU General Public License
 # along with Rodare. If not, see <http://www.gnu.org/licenses/>.
 
-
 variables:
+  MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+  MYSQL_USER: test
+  MYSQL_PASSWORD: test
+  MYSQL_DATABASE: test
   PIP_CACHE_DIR: $CI_PROJECT_DIR/.pip-cache
-
-cache:
-  paths:
-    - $CI_PROJECT_DIR/.pip-cache
+  POSTGRES_USER: postgres
+  POSTGRES_DB: test
 
 before_script:
   - curl -sL https://deb.nodesource.com/setup_6.x | bash -
   - apt-get -qy install --fix-missing --no-install-recommends nodejs
   - pip install --upgrade pip setuptools py
   - pip install twine wheel coveralls requirements-builder
-  - requirements-builder -e all --level=min setup.py > .ci-min-requirements.txt
-  - requirements-builder -e all --level=pypi setup.py > .ci-pypi-requirements.txt
-  - requirements-builder -e all --level=dev --req requirements-devel.txt setup.py > .ci-devel-requirements.txt
+  - requirements-builder -e $EXTRAS --level=min setup.py > .ci-min-requirements.txt
+  - requirements-builder -e $EXTRAS --level=pypi setup.py > .ci-pypi-requirements.txt
+  - requirements-builder -e $EXTRAS --level=dev --req requirements-devel.txt setup.py > .ci-devel-requirements.txt
   - pip install -r .ci-$REQUIREMENTS-requirements.txt
   - pip install -e .[$EXTRAS]
 
-py3.5-min:
-  image: python:3.6
-  variables:
-    EXTRAS: all
-    REQUIREMENTS: min
-  script:
-    - ./run-tests.sh
-  
-py3.5-pypi:
-  image: python:3.6
-  variables:
-    EXTRAS: all
-    REQUIREMENTS: pypi
+.base-job: &base-job
+  retry: 1
+  stage: test
   script:
     - ./run-tests.sh
 
-py3.5-devel:
+.cache-sqlite: &cache-sqlite
+  cache:
+    key: pip-sqlite
+    paths:
+      - "$CI_PROJECT_DIR/.pip-cache"
+
+.cache-postgres: &cache-postgres
+  cache:
+    key: pip-postgres
+    paths:
+      - "$CI_PROJECT_DIR/.pip-cache"
+
+.cache-mysql: &cache-mysql
+  cache:
+    key: pip-mysql
+    paths:
+      - "$CI_PROJECT_DIR/.pip-cache"
+
+.sqlite: &sqlite
+  SQLALCHEMY_DATABASE_URI: "sqlite:///test.db"
+  EXTRAS: all,sqlite
+
+.postgresql: &postgresql
+  SQLALCHEMY_DATABASE_URI: "postgresql+psycopg2://postgres@postgres:5432/test"
+  EXTRAS: all,postgresql
+
+.mysql: &mysql
+  SQLALCHEMY_DATABASE_URI: "mysql+pymysql://test:test@mysql:3306/test"
+  EXTRAS: all,mysql
+
+.min: &min
+  REQUIREMENTS: min
+
+.pypi: &pypi
+  REQUIREMENTS: pypi
+
+.services-mysql: &services-mysql
+  services:
+    - mysql:5
+
+.services-postgres: &services-postgres
+  services:
+    - postgres:9-alpine
+
+.python36: &python36
+  <<: *base-job
   image: python:3.6
+
+py3.6-min-sqlite:
+  <<: *python36
+  <<: *cache-sqlite
   variables:
-    EXTRAS: all
-    REQUIREMENTS: devel
-  script:
-    - ./run-tests.sh
+    <<: *sqlite
+    <<: *min
+
+py3.6-pypi-sqlite:
+  <<: *python36
+  <<: *cache-sqlite
+  variables:
+    <<: *sqlite
+    <<: *pypi
+
+py3.6-min-mysql:
+  <<: *python36
+  <<: *cache-mysql
+  <<: *services-mysql
+  variables:
+    <<: *mysql
+    <<: *min
+
+py3.6-pypi-mysql:
+  <<: *python36
+  <<: *cache-mysql
+  <<: *services-mysql
+  variables:
+    <<: *mysql
+    <<: *pypi
+
+py3.6-min-mysql:
+  <<: *python36
+  <<: *cache-postgres
+  <<: *services-postgres
+  variables:
+    <<: *postgresql
+    <<: *min
+
+py3.6-pypi-postgres:
+  <<: *python36
+  <<: *cache-postgres
+  <<: *services-postgres
+  variables:
+    <<: *postgresql
+    <<: *pypi

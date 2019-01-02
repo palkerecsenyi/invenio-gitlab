@@ -23,8 +23,3 @@ API Docs
 .. automodule:: invenio_gitlab.ext
    :members:
 
-Views
------
-
-.. automodule:: invenio_gitlab.views
-   :members:
