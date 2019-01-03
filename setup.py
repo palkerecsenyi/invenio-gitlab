@@ -63,8 +63,11 @@ setup_requires = [
 ]
 
 install_requires = [
+    'Flask>=0.11.1',
     'Flask-BabelEx>=0.9.2',
     'invenio-accounts>=1.0.0',
+    'invenio-records>=1.0.0',
+    'invenio-webhooks>=1.0.0a4',
 ]
 
 packages = find_packages()
@@ -99,6 +102,9 @@ setup(
         ],
         'invenio_db.models': [
             'invenio_gitlab = invenio_gitlab.models',
+        ],
+        'invenio_webhooks.receivers': [
+            'gitlab = invenio_gitlab.receivers:GitLabReceiver',
         ],
     },
     extras_require=extras_require,

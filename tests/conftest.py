@@ -21,6 +21,7 @@
 
 from __future__ import absolute_import, print_function
 
+import json
 import os
 import shutil
 import tempfile
@@ -28,15 +29,18 @@ import tempfile
 import pytest
 from flask import Flask
 from flask_babelex import Babel
+from flask_celeryext import FlaskCeleryExt
 from invenio_accounts import InvenioAccounts
 from invenio_db import InvenioDB
 from invenio_db import db as db_
+from invenio_webhooks import InvenioWebhooks
+from invenio_webhooks.views import blueprint as webhooks_blueprint
 from sqlalchemy_utils.functions import create_database, database_exists
 
 from invenio_gitlab import InvenioGitLab
 
 
-@pytest.yield_fixture()
+@pytest.fixture()
 def instance_path():
     """Temporary instance path."""
     path = tempfile.mkdtemp()
@@ -49,14 +53,23 @@ def base_app(instance_path):
     """Flask application fixture."""
     app_ = Flask('testapp', instance_path=instance_path)
     app_.config.update(
+        CACHE_TYPE='simple',
+        CELERY_TASK_ALWAYS_EAGER=True,
+        CELERY_CACHE_BACKEND='memory',
+        CELERY_TASK_EAGER_PROPAGATES=True,
+        CELERY_RESULT_BACKEND='cache',
         SQLALCHEMY_TRACK_MODIFICATIONS=False,
         SQLALCHEMY_DATABASE_URI=os.getenv('SQLALCHEMY_DATABASE_URI',
                                           'sqlite://'),
         SECRET_KEY='SECRET_KEY',
         TESTING=True,
     )
+    celeryext = FlaskCeleryExt(app_)
     InvenioDB(app_)
     InvenioAccounts(app_)
+    InvenioWebhooks(app_)
+    celeryext.celery.flask_app = app_  # Make sure both apps are the same!
+    app_.register_blueprint(webhooks_blueprint)
 
     return app_
 
@@ -77,9 +90,10 @@ def db(app):
     db_.create_all()
     yield db_
     db_.session.remove()
+    db_.drop_all()
 
 
-@pytest.fixture
+@pytest.fixture()
 def tester_id(app, db):
     """Fixture that contains the test data for models tests."""
     datastore = app.extensions['security'].datastore
@@ -88,3 +102,16 @@ def tester_id(app, db):
     )
     db.session.commit()
     return tester.id
+
+
+@pytest.fixture()
+def hook_response():
+    """Fixture that returns a sample dictionary the same as the GitLab API."""
+    path = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        'data',
+        'gitlab_tag_hook.json'
+    )
+    with open(path) as f:
+        data = json.load(f)
+    return data

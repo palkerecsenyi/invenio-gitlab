@@ -24,8 +24,16 @@ class GitLabError(Exception):
     """General GitLab error."""
 
 
+class RepositoryDisabledError(GitLabError):
+    """Tried to create Release, but Repository is disabled."""
+
+
 class RepositoryAccessError(GitLabError):
     """Repository access permissions error."""
+
+
+class ReleaseAlreadyReceivedError(GitLabError):
+    """Release already processed."""
 
 
 class InvalidRegexError(GitLabError):
