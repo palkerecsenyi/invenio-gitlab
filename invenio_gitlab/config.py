@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2018 HZDR
+# Copyright (C) 2019 HZDR
 #
 # This file is part of RODARE.
 #
@@ -18,3 +18,32 @@
 # along with Rodare. If not, see <http://www.gnu.org/licenses/>.
 
 """Module for Invenio that adds GitLab integration."""
+
+from __future__ import absolute_import
+from copy import deepcopy
+
+from .handlers import REMOTE_APP
+
+
+GITLAB_BASE_URL = 'https://gitlab.com'
+"""Default GitLab instance to use."""
+
+GITLAB_REMOTE_APP = deepcopy(REMOTE_APP)
+"""GitLab remote application configuration."""
+
+GITLAB_WEBHOOK_RECEIVER_URL = None
+"""URL format to be used when creating a webhook in GitLab.
+
+This variable must be set explicitly. Example:
+
+    http://localhost:5000/api/receivers/gitlab/events/?access_token={token}
+
+.. note::
+
+    This config variable is used because using `url_for` to get and external
+    url of an `invenio_base.api_bluebrint`, while inside the regular app
+    context, doesn't work as expected.
+"""
+
+GITLAB_WEBHOOK_RECEIVER_ID = 'gitlab'
+"""Local name of webhook receiver."""
