@@ -91,6 +91,10 @@ before_script:
   <<: *base-job
   image: python:3.6
 
+.python27: &python27
+  <<: *base-job
+  image: python:2.7
+
 py3.6-min-sqlite:
   <<: *python36
   <<: *cache-sqlite
@@ -121,7 +125,7 @@ py3.6-pypi-mysql:
     <<: *mysql
     <<: *pypi
 
-py3.6-min-mysql:
+py3.6-min-postgres:
   <<: *python36
   <<: *cache-postgres
   <<: *services-postgres
@@ -131,6 +135,22 @@ py3.6-min-mysql:
 
 py3.6-pypi-postgres:
   <<: *python36
+  <<: *cache-postgres
+  <<: *services-postgres
+  variables:
+    <<: *postgresql
+    <<: *pypi
+
+py2.7-min-postgres:
+  <<: *python27
+  <<: *cache-postgres
+  <<: *services-postgres
+  variables:
+    <<: *postgresql
+    <<: *min
+
+py2.7-pypi-postgres:
+  <<: *python27
   <<: *cache-postgres
   <<: *services-postgres
   variables:
