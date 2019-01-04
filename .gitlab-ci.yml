@@ -18,6 +18,7 @@
 # along with Rodare. If not, see <http://www.gnu.org/licenses/>.
 
 variables:
+  ACCOUNTS_SESSION_REDIS_URL: "redis://redis:6379/0"
   MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
   MYSQL_USER: test
   MYSQL_PASSWORD: test
@@ -79,13 +80,19 @@ before_script:
 .pypi: &pypi
   REQUIREMENTS: pypi
 
+.services-sqlite: &services-sqlite
+  services:
+    - redis
+
 .services-mysql: &services-mysql
   services:
     - mysql:5
+    - redis
 
 .services-postgres: &services-postgres
   services:
     - postgres:9-alpine
+    - redis
 
 .python36: &python36
   <<: *base-job
@@ -98,6 +105,7 @@ before_script:
 py3.6-min-sqlite:
   <<: *python36
   <<: *cache-sqlite
+  <<: *services-sqlite
   variables:
     <<: *sqlite
     <<: *min
@@ -105,6 +113,7 @@ py3.6-min-sqlite:
 py3.6-pypi-sqlite:
   <<: *python36
   <<: *cache-sqlite
+  <<: *services-sqlite
   variables:
     <<: *sqlite
     <<: *pypi

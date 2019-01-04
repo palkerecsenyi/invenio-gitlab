@@ -30,14 +30,24 @@ import pytest
 from flask import Flask
 from flask_babelex import Babel
 from flask_celeryext import FlaskCeleryExt
+from flask_mail import Mail
+from flask_menu import Menu as FlaskMenu
+from flask_oauthlib.client import OAuth as FlaskOAuth
 from invenio_accounts import InvenioAccounts
 from invenio_db import InvenioDB
 from invenio_db import db as db_
+from invenio_oauth2server import InvenioOAuth2Server
+from invenio_oauthclient import InvenioOAuthClient
+from invenio_oauthclient.views.client import blueprint as blueprint_client
+from invenio_oauthclient.views.settings import blueprint as settings_blueprint
+from invenio_userprofiles import InvenioUserProfiles
+from invenio_userprofiles.models import UserProfile
 from invenio_webhooks import InvenioWebhooks
 from invenio_webhooks.views import blueprint as webhooks_blueprint
 from sqlalchemy_utils.functions import create_database, database_exists
 
 from invenio_gitlab import InvenioGitLab
+from invenio_gitlab.handlers import REMOTE_APP as GITLAB_REMOTE_APP
 
 
 @pytest.fixture()
@@ -53,23 +63,49 @@ def base_app(instance_path):
     """Flask application fixture."""
     app_ = Flask('testapp', instance_path=instance_path)
     app_.config.update(
+        ACCOUNTS_SESSION_REDIS_URL=os.getenv('ACCOUNTS_SESSION_REDIS_URL',
+                                             'redis://localhost:6379/0'),
         CACHE_TYPE='simple',
         CELERY_TASK_ALWAYS_EAGER=True,
         CELERY_CACHE_BACKEND='memory',
         CELERY_TASK_EAGER_PROPAGATES=True,
         CELERY_RESULT_BACKEND='cache',
+        # use local memory mailbox
+        EMAIL_BACKEND='flask_email.backends.locmem.Mail',
+        LOGIN_DISABLED=False,
+        OAUTHCLIENT_REMOTE_APPS=dict(
+            gitlab=GITLAB_REMOTE_APP,
+        ),
+        GITLAB_APP_CREDENTIALS=dict(
+            consumer_key='gitlab_key_changeme',
+            consumer_secret='gitlab_secret_changeme',
+        ),
         SQLALCHEMY_TRACK_MODIFICATIONS=False,
         SQLALCHEMY_DATABASE_URI=os.getenv('SQLALCHEMY_DATABASE_URI',
                                           'sqlite://'),
         SECRET_KEY='SECRET_KEY',
+        SECURITY_DEPRECATED_PASSWORD_SCHEMES=[],
+        SECURITY_PASSWORD_HASH='plaintext',
+        SECURITY_PASSWORD_SCHEMES=['plaintext'],
+        SERVER_NAME='localhost.localdomain',
         TESTING=True,
+        USERPROFILES_EXTEND_SECURITY_FORMS=True,
+        WTF_CSRF_ENABLED=True,
     )
     celeryext = FlaskCeleryExt(app_)
     InvenioDB(app_)
     InvenioAccounts(app_)
+    Mail(app_)
+    FlaskMenu(app_)
     InvenioWebhooks(app_)
     celeryext.celery.flask_app = app_  # Make sure both apps are the same!
     app_.register_blueprint(webhooks_blueprint)
+    FlaskOAuth(app_)
+    InvenioOAuthClient(app_)
+    app_.register_blueprint(blueprint_client)
+    app_.register_blueprint(settings_blueprint)
+    InvenioOAuth2Server(app_)
+    InvenioUserProfiles(app_)
 
     return app_
 
@@ -80,6 +116,13 @@ def app(base_app):
     InvenioGitLab(base_app)
     with base_app.app_context():
         yield base_app
+
+
+@pytest.fixture()
+def client(app):
+    """Yield test client."""
+    with app.test_client() as test_client:
+        yield test_client
 
 
 @pytest.fixture()
@@ -115,3 +158,27 @@ def hook_response():
     with open(path) as f:
         data = json.load(f)
     return data
+
+
+@pytest.fixture
+def example_gitlab(request):
+    """Gitlab example data."""
+    return {
+        "access_token": "test_access_token",
+        "token_type": "bearer",
+        "expires_in": 7200,
+        "refresh_token": "test_refresh_token"
+    }
+
+
+@pytest.fixture()
+def user(app, db):
+    """Create users."""
+    with db.session.begin_nested():
+        datastore = app.extensions['security'].datastore
+        user1 = datastore.create_user(email='info@hzdr.de',
+                                      password='tester', active=True)
+        profile = UserProfile(username='test', user=user1)
+        db.session.add(profile)
+    db.session.commit()
+    return user1

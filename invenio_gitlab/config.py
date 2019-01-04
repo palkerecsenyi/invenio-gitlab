@@ -20,10 +20,10 @@
 """Module for Invenio that adds GitLab integration."""
 
 from __future__ import absolute_import
+
 from copy import deepcopy
 
 from .handlers import REMOTE_APP
-
 
 GITLAB_BASE_URL = 'https://gitlab.com'
 """Default GitLab instance to use."""

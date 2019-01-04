@@ -80,8 +80,8 @@ def account_info(remote, resp):
         user=dict(
             email=user_attrs['email'],
             profile=dict(
-                username=user_attrs.username,
-                full_name=user_attrs.name,
+                username=user_attrs['username'],
+                full_name=user_attrs['name'],
             ),
         ),
         external_id=str(user_attrs['id']),
