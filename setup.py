@@ -113,6 +113,12 @@ setup(
         'invenio_webhooks.receivers': [
             'gitlab = invenio_gitlab.receivers:GitLabReceiver',
         ],
+        'invenio_admin.views': [
+            'invenio_gitlab_project = '
+            'invenio_gitlab.admin:project_adminview',
+            'invenio_gitlab_releases = '
+            'invenio_gitlab.admin:release_adminview',
+        ],
     },
     extras_require=extras_require,
     install_requires=install_requires,
