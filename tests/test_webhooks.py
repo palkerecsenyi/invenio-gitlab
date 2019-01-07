@@ -23,12 +23,12 @@ import json
 
 from invenio_webhooks.models import Event
 
-from invenio_gitlab.models import Release, Repository
+from invenio_gitlab.models import Project, Release
 
 
 def test_webhook_post(app, db, tester_id, hook_response):
     """Test payload treatmend on the webhook."""
-    Repository.enable(tester_id, gitlab_id=1, name="Example", hook=456)
+    Project.enable(tester_id, gitlab_id=1, name="Example", hook=456)
     db.session.commit()
 
     headers = [('Content-Type', 'application/json')]

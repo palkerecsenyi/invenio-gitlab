@@ -23,49 +23,49 @@ import re
 
 import pytest
 
-from invenio_gitlab.errors import InvalidRegexError, RepositoryAccessError
-from invenio_gitlab.models import Repository
+from invenio_gitlab.errors import InvalidRegexError, ProjectAccessError
+from invenio_gitlab.models import Project
 
 
-def test_repository(app, db, tester_id):
-    """Test repositories model."""
-    repository = Repository.create(
+def test_project(app, db, tester_id):
+    """Test projects model."""
+    project = Project.create(
         user_id=tester_id,
         gitlab_id=1234,
         name="tester/testproject",
     )
-    db.session.add(repository)
+    db.session.add(project)
     db.session.commit()
 
-    # get the repository by id
-    repo = Repository.get(user_id=tester_id, gitlab_id=1234)
-    assert repo.name == "tester/testproject"
+    # get the project by id
+    project = Project.get(user_id=tester_id, gitlab_id=1234)
+    assert project.name == "tester/testproject"
 
-    assert str(repo) == "<Repository tester/testproject:1234>"
+    assert str(project) == "<Project tester/testproject:1234>"
 
-    with pytest.raises(RepositoryAccessError):
-        repo = Repository.get(user_id=tester_id+1, gitlab_id=1234)
+    with pytest.raises(ProjectAccessError):
+        project = Project.get(user_id=tester_id+1, gitlab_id=1234)
 
     # Test creation with custom regex.
     regex = r'^v\d*\.\d*$'
-    repository = Repository.create(
+    project = Project.create(
         user_id=tester_id,
         gitlab_id=2456,
         name="tester/testproject12",
         regex=regex,
     )
-    db.session.add(repository)
+    db.session.add(project)
     db.session.commit()
 
-    # get the repository by id
-    repo = Repository.get(user_id=tester_id, gitlab_id=2456)
-    assert repo.release_regex == regex
-    re.compile(repo.release_regex)
+    # get the project by id
+    project = Project.get(user_id=tester_id, gitlab_id=2456)
+    assert project.release_regex == regex
+    re.compile(project.release_regex)
 
     # Test invalid regex.
     regex = r'[\d*'
     with pytest.raises(InvalidRegexError):
-        repository = Repository.create(
+        project = Project.create(
             user_id=tester_id,
             gitlab_id=2456,
             name="tester/testproject12",

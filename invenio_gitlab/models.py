@@ -37,8 +37,8 @@ from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy_utils.models import Timestamp
 from sqlalchemy_utils.types import ChoiceType, JSONType, UUIDType
 
-from .errors import InvalidRegexError, ReleaseAlreadyReceivedError, \
-    RepositoryAccessError, RepositoryDisabledError
+from .errors import InvalidRegexError, ProjectAccessError, \
+    ProjectDisabledError, ReleaseAlreadyReceivedError
 
 RELEASE_STATUS_TITLES = {
     'RECEIVED': _('Received'),
@@ -112,17 +112,17 @@ class ReleaseStatus(Enum):
         return RELEASE_STATUS_COLOR[self.name]
 
 
-class Repository(db.Model, Timestamp):
-    """Information about a GitLab repository."""
+class Project(db.Model, Timestamp):
+    """Information about a GitLab project."""
 
-    __tablename__ = 'gitlab_repositories'
+    __tablename__ = 'gitlab_projects'
 
     id = db.Column(
         UUIDType,
         primary_key=True,
         default=uuid.uuid4,
     )
-    """Repository identifier."""
+    """Project identifier."""
 
     gitlab_id = db.Column(
         db.Integer,
@@ -130,16 +130,16 @@ class Repository(db.Model, Timestamp):
         index=True,
         nullable=True,
     )
-    """Unique identifier for a GitLab repository."""
+    """Unique identifier for a GitLab project."""
 
     name = db.Column(db.String(255), unique=True, index=True, nullable=False)
-    """Fully qualified name of the repository including user/organization."""
+    """Fully qualified name of the project including user/organization."""
 
     user_id = db.Column(db.Integer, db.ForeignKey(User.id), nullable=True)
-    """Reference user that can manage this repository."""
+    """Reference user that can manage this project."""
 
     ping = db.Column(db.DateTime, nullable=True)
-    """Last ping of the repository."""
+    """Last ping of the project."""
 
     hook = db.Column(db.Integer)
     """Hook identifier."""
@@ -155,7 +155,7 @@ class Repository(db.Model, Timestamp):
 
     @classmethod
     def create(cls, user_id, gitlab_id=None, name=None, regex=None, **kwargs):
-        """Create the repository."""
+        """Create the project."""
         with db.session.begin_nested():
             obj = cls(user_id=user_id, gitlab_id=gitlab_id, name=name,
                       **kwargs)
@@ -171,48 +171,49 @@ class Repository(db.Model, Timestamp):
 
     @classmethod
     def get(cls, user_id, gitlab_id=None, name=None, check_owner=True):
-        """Return a repository.
+        """Return a project.
 
         :param integer user_id: User identifier.
         :param integer gitlab_id: GitLab project identifier.
-        :param str name: GitLab repository full name.
-        :raises: :py:exc:`~sqlalchemy.orm.exc.NoResultFound`: if the repository
+        :param str name: GitLab project full name.
+        :raises: :py:exc:`~sqlalchemy.orm.exc.NoResultFound`: if the project
                  doesn't exist.
         :raises: :py:exc:`~sqlalchemy.orm.exc.MultipleResultsFound`: if
-                 multiple repositories with the specified GitLab id and/or name
+                 multiple projects with the specified GitLab id and/or name
                  exist.
-        :raises: :py:exc:`RepositoryAccessError`: if the user is not the owner
-                 of the repository.
+        :raises: :py:exc:`ProjectAccessError`: if the user is not the owner
+                 of the project.
         """
-        repo = cls.query.filter((Repository.gitlab_id == gitlab_id) |
-                                (Repository.name == name)).one()
-        if (check_owner and repo and repo.user_id and
-                repo.user_id != int(user_id)):
-            raise RepositoryAccessError(
-                'User {user} cannot access repository {repo}({repo_id}).'
-                .format(user=user_id, repo=name, repo_id=gitlab_id)
+        project = cls.query.filter((Project.gitlab_id == gitlab_id) |
+                                   (Project.name == name)).one()
+        if (check_owner and project and project.user_id and
+                project.user_id != int(user_id)):
+            raise ProjectAccessError(
+                'User {user} cannot access project {project}({project_id}).'
+                .format(user=user_id, project=name, project_id=gitlab_id)
             )
-        return repo
+        return project
 
     @classmethod
     def enable(cls, user_id, gitlab_id, name, hook):
-        """Enable webhooks for a repository."""
+        """Enable webhooks for a project."""
         try:
-            repo = cls.get(user_id, gitlab_id, name=name)
+            project = cls.get(user_id, gitlab_id, name=name)
         except NoResultFound:
-            repo = cls.create(user_id=user_id, gitlab_id=gitlab_id, name=name)
-            repo.hook = hook
-            repo.user_id = user_id
-            return repo
+            project = cls.create(
+                user_id=user_id, gitlab_id=gitlab_id, name=name)
+            project.hook = hook
+            project.user_id = user_id
+            return project
 
     @property
     def enabled(self):
-        """Return, if webhooks are enabled for the repository."""
+        """Return, if webhooks are enabled for the project."""
         return bool(self.hook)
 
     def __repr__(self):
-        """Get repository representation."""
-        return u'<Repository {self.name}:{self.gitlab_id}>'.format(self=self)
+        """Get project representation."""
+        return u'<Project {self.name}:{self.gitlab_id}>'.format(self=self)
 
 
 class Release(db.Model, Timestamp):
@@ -239,8 +240,8 @@ class Release(db.Model, Timestamp):
     )
     """Release processing errors."""
 
-    repository_id = db.Column(UUIDType, db.ForeignKey(Repository.id))
-    """Repository identifier."""
+    project_id = db.Column(UUIDType, db.ForeignKey(Project.id))
+    """Project identifier."""
 
     event_id = db.Column(UUIDType, db.ForeignKey(Event.id), nullable=True)
     """Incoming webhook event identifier."""
@@ -258,8 +259,8 @@ class Release(db.Model, Timestamp):
     )
     """Status of the release, e.g. 'processing', 'published', 'failed', etc."""
 
-    repository = db.relationship(
-        Repository,
+    project = db.relationship(
+        Project,
         backref=db.backref('releases', lazy='dynamic')
     )
 
@@ -271,9 +272,9 @@ class Release(db.Model, Timestamp):
         """Create a new release model."""
         tag = event.payload['ref'].split('refs/tags/')[1]
         # Check, if the tag matches the regular expression.
-        repo_id = event.payload['project_id']
-        repo = Repository.get(user_id=event.user_id, gitlab_id=repo_id)
-        rex = re.compile(repo.release_regex)
+        project_id = event.payload['project_id']
+        project = Project.get(user_id=event.user_id, gitlab_id=project_id)
+        rex = re.compile(project.release_regex)
         if not rex.match(tag):
             return
         # Check, if the release has already been processed.
@@ -285,22 +286,23 @@ class Release(db.Model, Timestamp):
             )
 
         # Create the release
-        if repo.enabled:
+        if project.enabled:
             with db.session.begin_nested():
                 release = cls(
                     tag=tag,
-                    repository=repo,
+                    project=project,
                     event=event,
                     status=ReleaseStatus.RECEIVED,
                 )
                 db.session.add(release)
         else:
             current_app.logger.warning(
-                'Release creation attempt on disabled {repo}.'
-                .format(repo=repo)
+                'Release creation attempt on disabled {project}.'
+                .format(project=project)
             )
-            raise RepositoryDisabledError(
-                '{repo} is not enabled for webhooks.'.format(repo=repo)
+            raise ProjectDisabledError(
+                '{project} is not enabled for webhooks.'.format(
+                    project=project)
             )
 
     def __repr__(self):

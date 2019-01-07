@@ -30,7 +30,7 @@ from invenio_oauthclient.proxies import current_oauthclient
 from werkzeug.local import LocalProxy
 from werkzeug.utils import cached_property
 
-from .models import Repository
+from .models import Project
 from .utils import iso_utcnow
 
 
@@ -102,7 +102,7 @@ class GitLabAPI(object):
             tokens=dict(
                 webhook=hook_token.id,
             ),
-            repos=dict(),
+            projects=dict(),
             last_sync=iso_utcnow(),
         )
         db.session.add(self.account)
@@ -110,11 +110,11 @@ class GitLabAPI(object):
         self.sync(hooks=False)
 
     def sync(self, hooks=True, async_hooks=True):
-        """Synchronize user repositories."""
+        """Synchronize user projects."""
         active_projects = {}
-        # Get user owned repositories.
-        gitlab_projects = {repo.attributes['id']: repo.attributes
-                           for repo in self.api.projects.list(
+        # Get user owned projects.
+        gitlab_projects = {project.attributes['id']: project.attributes
+                           for project in self.api.projects.list(
             owned=True, simple=True)}
 
         for gl_project_id, gl_project in gitlab_projects.items():
@@ -128,10 +128,10 @@ class GitLabAPI(object):
             # TODO: Sync hooks here.
             pass
 
-        # Update changed names for repositories stored in DB
-        db_projects = Repository.query.filter(
-            Repository.user_id == self.user_id,
-            Repository.gitlab_id.in_(gitlab_projects.keys()),
+        # Update changed names for projects stored in DB
+        db_projects = Project.query.filter(
+            Project.user_id == self.user_id,
+            Project.gitlab_id.in_(gitlab_projects.keys()),
         )
 
         for project in db_projects:
@@ -140,16 +140,16 @@ class GitLabAPI(object):
                 project.name = gl_project.full_name
                 db.session.add(project)
 
-        # Remove ownership from repositories, that the user no longer owns,
+        # Remove ownership from projects, that the user no longer owns,
         # or that have been deleted.
-        Repository.query.filter(
-            Repository.user_id == self.user_id,
-            ~Repository.gitlab_id.in_(gitlab_projects.keys())
+        Project.query.filter(
+            Project.user_id == self.user_id,
+            ~Project.gitlab_id.in_(gitlab_projects.keys())
         ).update(dict(user_id=None, hook=None), synchronize_session=False)
 
-        # Update repos and last sync
+        # Update projects and last sync
         self.account.extra_data.update(dict(
-            repos=active_projects,
+            projects=active_projects,
             last_sync=iso_utcnow(),
         ))
         self.account.extra_data.changed()

@@ -24,12 +24,12 @@ class GitLabError(Exception):
     """General GitLab error."""
 
 
-class RepositoryDisabledError(GitLabError):
-    """Tried to create Release, but Repository is disabled."""
+class ProjectDisabledError(GitLabError):
+    """Tried to create Release, but Project is disabled."""
 
 
-class RepositoryAccessError(GitLabError):
-    """Repository access permissions error."""
+class ProjectAccessError(GitLabError):
+    """Project access permissions error."""
 
 
 class ReleaseAlreadyReceivedError(GitLabError):

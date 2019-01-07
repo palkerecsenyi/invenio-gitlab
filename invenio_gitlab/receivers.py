@@ -24,8 +24,8 @@ from __future__ import absolute_import
 from invenio_db import db
 from invenio_webhooks.models import Receiver
 
-from .errors import InvalidRegexError, ReleaseAlreadyReceivedError, \
-    RepositoryAccessError, RepositoryDisabledError
+from .errors import InvalidRegexError, ProjectAccessError, \
+    ProjectDisabledError, ReleaseAlreadyReceivedError
 from .models import Release
 
 
@@ -36,7 +36,7 @@ class GitLabReceiver(Receiver):
 
     def run(self, event):
         """Process an event."""
-        repo_id = event.payload['project_id']
+        project_id = event.payload['project_id']
 
         # Handle tag event
         if event.payload['object_kind'] == "tag_push":
@@ -48,9 +48,9 @@ class GitLabReceiver(Receiver):
 
             except (InvalidRegexError,
                     ReleaseAlreadyReceivedError,
-                    RepositoryDisabledError) as e:
+                    ProjectDisabledError) as e:
                 event.response_code = 409
                 event.response = dict(message=str(e), status=409)
-            except RepositoryAccessError as e:
+            except ProjectAccessError as e:
                 event.response = 403
                 event.response = dict(message=str(e), status=403)
