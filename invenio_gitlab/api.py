@@ -30,6 +30,7 @@ from invenio_oauthclient.proxies import current_oauthclient
 from werkzeug.local import LocalProxy
 from werkzeug.utils import cached_property
 
+from .models import Repository
 from .utils import iso_utcnow
 
 
@@ -106,4 +107,50 @@ class GitLabAPI(object):
         )
         db.session.add(self.account)
 
-        # TODO: Sync data from Github here
+        self.sync(hooks=False)
+
+    def sync(self, hooks=True, async_hooks=True):
+        """Synchronize user repositories."""
+        active_projects = {}
+        # Get user owned repositories.
+        gitlab_projects = {repo.attributes['id']: repo.attributes
+                           for repo in self.api.projects.list(
+            owned=True, simple=True)}
+
+        for gl_project_id, gl_project in gitlab_projects.items():
+            active_projects[gl_project_id] = {
+                'id': gl_project_id,
+                'full_name': gl_project['name_with_namespace'],
+                'description': gl_project['description'],
+            }
+
+        if hooks:
+            # TODO: Sync hooks here.
+            pass
+
+        # Update changed names for repositories stored in DB
+        db_projects = Repository.query.filter(
+            Repository.user_id == self.user_id,
+            Repository.gitlab_id.in_(gitlab_projects.keys()),
+        )
+
+        for project in db_projects:
+            gl_project = gitlab_projects.get(project.gitlab_id)
+            if gl_project and project.name != gl_project.full_name:
+                project.name = gl_project.full_name
+                db.session.add(project)
+
+        # Remove ownership from repositories, that the user no longer owns,
+        # or that have been deleted.
+        Repository.query.filter(
+            Repository.user_id == self.user_id,
+            ~Repository.gitlab_id.in_(gitlab_projects.keys())
+        ).update(dict(user_id=None, hook=None), synchronize_session=False)
+
+        # Update repos and last sync
+        self.account.extra_data.update(dict(
+            repos=active_projects,
+            last_sync=iso_utcnow(),
+        ))
+        self.account.extra_data.changed()
+        db.session.add(self.account)

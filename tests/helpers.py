@@ -51,6 +51,35 @@ class GLUser(object):
         }
 
 
+class GLProjects(object):
+    """Class for mocking a GitLab project."""
+
+    def __init__(self, id=1234, name='test', name_with_namespace='test/test'):
+        """Init project."""
+        self.id = id
+        self.name = name
+        self.name_with_namespace = name_with_namespace
+
+    @property
+    def attributes(self):
+        """Project attributes."""
+        return dict(
+            id=self.id,
+            description='Test project description.',
+            name=self.name,
+            name_with_namespace=self.name_with_namespace,
+            created_at='2018-08-07T18:31:43.564Z',
+        )
+
+
+class ProjectList(object):
+    """GitLab project lists mock."""
+
+    def list(self, owned=False, simple=False):
+        """List GitLab projects."""
+        return [GLProjects()]
+
+
 class GitlabMock(object):
     """Mock GitLab API."""
 
@@ -61,3 +90,8 @@ class GitlabMock(object):
     def auth(self):
         """Mock auth."""
         return True
+
+    @property
+    def projects(self):
+        """Gitlab projects API."""
+        return ProjectList()
