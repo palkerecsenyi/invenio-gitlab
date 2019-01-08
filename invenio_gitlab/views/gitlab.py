@@ -65,7 +65,7 @@ def index():
             gitlab.init_account()
             db.session.commit()
 
-        if request.method == 'POST':
+        if request.method == 'POST' or gitlab.check_sync():
             # When we're in an XHR request, synchronously sync hooks
             gitlab.sync(async_hooks=(not request.is_xhr))
             db.session.commit()
@@ -99,4 +99,33 @@ def index():
 @login_required
 def hook():
     """Install or delete GitLab webhook."""
-    abort(501)
+    project_id = request.json['id']
+
+    gitlab = GitLabAPI(user_id=current_user.id)
+    projects = gitlab.account.extra_data['projects']
+
+    if project_id not in projects:
+        abort(404)
+
+    if request.method == 'DELETE':
+        try:
+            if gitlab.remove_hook(project_id,
+                                  projects[project_id]['full_name']):
+                db.session.commit()
+                return '', 204
+            else:
+                abort(400)
+        except Exception:
+            abort(403)
+    elif request.method == 'POST':
+        try:
+            if gitlab.create_hook(project_id,
+                                  projects[project_id]['full_name']):
+                db.session.commit()
+                return '', 201
+            else:
+                abort(400)
+        except Exception:
+            abort(403)
+    else:
+        abort(400)

@@ -32,7 +32,7 @@ from werkzeug.local import LocalProxy
 from werkzeug.utils import cached_property
 
 from .models import Project
-from .utils import iso_utcnow
+from .utils import iso_utcnow, parse_timestamp, utcnow
 
 
 class GitLabAPI(object):
@@ -135,7 +135,7 @@ class GitLabAPI(object):
         for gl_project_id, gl_project in gitlab_projects.items():
             active_projects[gl_project_id] = {
                 'id': gl_project_id,
-                'full_name': gl_project['name_with_namespace'],
+                'full_name': gl_project['path_with_namespace'],
                 'description': gl_project['description'],
             }
 
@@ -151,7 +151,8 @@ class GitLabAPI(object):
 
         for project in db_projects:
             gl_project = gitlab_projects.get(project.gitlab_id)
-            if gl_project and project.name != gl_project.full_name:
+            if (gl_project and
+                    project.name != gl_project['path_with_namespace']):
                 project.name = gl_project.full_name
                 db.session.add(project)
 
@@ -169,3 +170,63 @@ class GitLabAPI(object):
         ))
         self.account.extra_data.changed()
         db.session.add(self.account)
+
+    def check_sync(self):
+        """Check if sync is required based on the last sync date."""
+        # If no refresh interval is given, refresh every time.
+        expiration = utcnow()
+        refresh_td = current_app.config.get('GITLAB_REFRESH_TIMEDELTA')
+        if refresh_td:
+            expiration -= refresh_td
+        last_sync = parse_timestamp(self.account.extra_data['last_sync'])
+        return last_sync < expiration
+
+    def create_hook(self, project_id, project_name):
+        """Create project webhook."""
+        attributes = {
+            'url': self.webhook_url,
+            'push_events': 0,
+            'tag_push_events': 1,
+            'token': current_app.config['GITLAB_SHARED_SECRET'],
+            'enable_ssl_verification': 1 if not current_app.config[
+                'GITLAB_INSECURE_SSL'] else 0,
+        }
+        gl_project = self.api.projects.get(project_id)
+        if gl_project:
+            try:
+                # Check, if hook is already installed.
+                hooks = (h for h in gl_project.hooks.list()
+                         if h.attributes.get('url', '') == attributes['url'])
+                for h in hooks:
+                    h.delete()
+                # Recreate the webhook.
+                hook = gl_project.hooks.create(attributes)
+            except gitlab.GitlabError:
+                current_app.logger.error('Could not create webhook.')
+            finally:
+                if hook:
+                    Project.enable(
+                        user_id=self.user_id,
+                        gitlab_id=project_id,
+                        name=project_name,
+                        hook=hook.id,
+                    )
+                    return True
+        return False
+
+    def remove_hook(self, project_id, name):
+        """Remove webook from GitLab project."""
+        gl_project = self.api.projects.get(project_id)
+        if gl_project:
+            # Check, if hook is installed.
+            hooks = (h for h in gl_project.hooks.list()
+                     if h.attributes.get('url', '') == self.webhook_url)
+            for h in hooks:
+                h.delete()
+            Project.disable(
+                user_id=self.user_id,
+                gitlab_id=project_id,
+                name=name,
+            )
+            return True
+        return False

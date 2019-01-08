@@ -22,6 +22,7 @@
 from __future__ import absolute_import
 
 from copy import deepcopy
+from datetime import timedelta
 
 from .handlers import REMOTE_APP
 
@@ -30,6 +31,19 @@ GITLAB_BASE_URL = 'https://gitlab.com'
 
 GITLAB_REMOTE_APP = deepcopy(REMOTE_APP)
 """GitLab remote application configuration."""
+
+GITLAB_INSECURE_SSL = False
+"""Configure, if the GitLab webhhok verifies the SSL certificate.
+
+Never set this to True in a production environment. It is only useful for
+development and integration servers.
+"""
+
+GITLAB_REFRESH_TIMEDELTA = timedelta(days=1)
+"""Time period after which a GitLab account sync should be initiated."""
+
+GITLAB_SHARED_SECRET = 'CHANGEME'
+"""Shared secret between the application and GitLab."""
 
 GITLAB_WEBHOOK_RECEIVER_URL = None
 """URL format to be used when creating a webhook in GitLab.

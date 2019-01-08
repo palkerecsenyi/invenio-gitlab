@@ -52,7 +52,7 @@
 {%- endblock %}
 {%- endmacro %}
 
-{%- macro repo_switch(repo, repo_id, size='mini') %}
+{%- macro repo_switch(project, project_id, size='mini') %}
 {%- block repo_switch scoped %}
   <i class="hook-status fa" data-repo-id="{{project_id}}"></i>
   {%- set inaccessible = (project and project.user_id and (project.user_id != current_user.id)) %}

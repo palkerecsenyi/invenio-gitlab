@@ -202,9 +202,17 @@ class Project(db.Model, Timestamp):
         except NoResultFound:
             project = cls.create(
                 user_id=user_id, gitlab_id=gitlab_id, name=name)
-            project.hook = hook
-            project.user_id = user_id
-            return project
+        project.hook = hook
+        project.user_id = user_id
+        return project
+
+    @classmethod
+    def disable(cls, user_id, gitlab_id, name):
+        """Disable webhooks for a repository."""
+        project = cls.get(user_id, gitlab_id=gitlab_id, name=name)
+        project.hook = None
+        project.user_id = None
+        return project
 
     @property
     def enabled(self):

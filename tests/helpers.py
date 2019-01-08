@@ -54,11 +54,11 @@ class GLUser(object):
 class GLProjects(object):
     """Class for mocking a GitLab project."""
 
-    def __init__(self, id=1234, name='test', name_with_namespace='test/test'):
+    def __init__(self, id=1234, name='test', path_with_namespace='test/test'):
         """Init project."""
         self.id = id
         self.name = name
-        self.name_with_namespace = name_with_namespace
+        self.path_with_namespace = path_with_namespace
 
     @property
     def attributes(self):
@@ -67,7 +67,7 @@ class GLProjects(object):
             id=self.id,
             description='Test project description.',
             name=self.name,
-            name_with_namespace=self.name_with_namespace,
+            path_with_namespace=self.path_with_namespace,
             created_at='2018-08-07T18:31:43.564Z',
         )
 
