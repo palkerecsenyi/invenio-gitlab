@@ -59,6 +59,9 @@ This variable must be set explicitly. Example:
     context, doesn't work as expected.
 """
 
+GITLAB_DEPOSIT_CLASS = 'invenio_deposit.api:Deposit'
+"""Deposit class that implements a `publish` method."""
+
 GITLAB_WEBHOOK_RECEIVER_ID = 'gitlab'
 """Local name of webhook receiver."""
 

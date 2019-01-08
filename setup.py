@@ -76,6 +76,7 @@ install_requires = [
     'invenio-oauth2server>=1.0.0',
     'invenio-records>=1.0.0',
     'invenio-webhooks>=1.0.0a4',
+    'oauthlib>=2.0.0,<3.0.0',
     'python-gitlab>=1.7.0',
 ]
 
