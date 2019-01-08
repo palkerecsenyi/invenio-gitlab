@@ -25,6 +25,7 @@ import gitlab
 from flask import current_app
 from invenio_db import db
 from invenio_oauth2server.models import Token as ProviderToken
+from invenio_oauthclient.handlers import token_getter
 from invenio_oauthclient.models import RemoteAccount, RemoteToken
 from invenio_oauthclient.proxies import current_oauthclient
 from werkzeug.local import LocalProxy
@@ -66,6 +67,20 @@ class GitLabAPI(object):
         ]
     )
     """Return OAuth remote application."""
+
+    @property
+    def session_token(self):
+        """Return OAuth session token."""
+        session_token = None
+        if self.user_id is not None:
+            session_token = token_getter(self.remote)
+        if session_token:
+            token = RemoteToken.get(
+                self.user_id, self.remote.consumer_key,
+                access_token=session_token[0]
+            )
+            return token
+        return None
 
     @cached_property
     def account(self):

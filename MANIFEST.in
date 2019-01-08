@@ -34,5 +34,8 @@ recursive-include docs *.txt
 recursive-include docs Makefile
 recursive-include examples *.py
 recursive-include examples *.sh
+recursive-include invenio_gitlab *.html
+recursive-include invenio_gitlab *.js
+recursive-include invenio_gitlab *.scss
 recursive-include tests *.py
 recursive-include tests *.json

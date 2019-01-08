@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2018 HZDR
+# Copyright (C) 2018-2019 HZDR
 #
 # This file is part of RODARE.
 #
@@ -69,7 +69,9 @@ setup_requires = [
 install_requires = [
     'Flask>=0.11.1',
     'Flask-BabelEx>=0.9.2',
+    'humanize>=0.5.1',
     'invenio-accounts>=1.0.0',
+    'invenio-assets>=1.0.0',
     'invenio-oauthclient>=1.0.0',
     'invenio-oauth2server>=1.0.0',
     'invenio-records>=1.0.0',
@@ -104,6 +106,9 @@ setup(
         'invenio_base.apps': [
             'invenio_gitlab = invenio_gitlab:InvenioGitLab',
         ],
+        'invenio_base.blueprints': [
+            'invenio_gitlab_settings = invenio_gitlab.views.gitlab:blueprint',
+        ],
         'invenio_i18n.translations': [
             'messages = invenio_gitlab',
         ],
@@ -118,6 +123,10 @@ setup(
             'invenio_gitlab.admin:project_adminview',
             'invenio_gitlab_releases = '
             'invenio_gitlab.admin:release_adminview',
+        ],
+        'invenio_assets.bundles': [
+            'invenio_gitlab_js = invenio_gitlab.bundles:js',
+            'invenio_gitlab_css = invenio_gitlab.bundles:css',
         ],
     },
     extras_require=extras_require,

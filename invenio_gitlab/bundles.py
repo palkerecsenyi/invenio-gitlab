@@ -1,0 +1,53 @@
+# -*- coding: utf-8 -*-
+#
+# Copyright (C) 2019 HZDR
+#
+# This file is part of RODARE.
+#
+# invenio-gitlab is free software: you can redistribute it
+# and/or modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation, either version 3 of the License,
+# or (at your option) any later version.
+#
+# invenio-gitlab is distributed in the hope that
+# it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+# warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Rodare. If not, see <http://www.gnu.org/licenses/>.
+
+"""GitLab bundles for user interface."""
+
+from flask_assets import Bundle
+from invenio_assets import NpmBundle
+
+js = NpmBundle(
+    'node_modules/bootstrap-switch/dist/js/bootstrap-switch.js',
+    Bundle(
+        'js/gitlab/init.js',
+        filters='requirejs',
+    ),
+    depends=('js/gitlab/*.js'),
+    filters='jsmin',
+    npm={
+        'bootstrap-switch': '~3.0.2',
+    },
+    output='gen/gitlab.%(version)s.js',
+)
+"""Default Javascript bundle."""
+
+css = NpmBundle(
+    'node_modules/bootstrap-switch/dist/css/bootstrap3/bootstrap-switch.css',
+    Bundle(
+        'scss/gitlab/gitlab.scss',
+        filters='scss',
+    ),
+    filters='cleancss',
+    depends=('scss/gitlab/*.scss'),
+    npm={
+        'bootstrap-switch': '~3.0.2',
+    },
+    output='gen/gitlab.%(version)s.css',
+)
+"""Default CSS bundle."""

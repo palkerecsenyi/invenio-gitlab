@@ -1,0 +1,141 @@
+{%- import "invenio_gitlab/settings/helpers.html" as helpers with context %}
+
+{%- if not request.is_xhr %}
+{%- extends config.GITLAB_SETTINGS_TEMPLATE %}
+
+{%- block css %}
+{{ super() }}
+{% assets "invenio_gitlab_css" %}<link href="{{ ASSET_URL }}" rel="stylesheet">{% endassets %}
+{%- endblock css %}
+
+{%- block javascript %}
+{{ super() }}
+{% assets "invenio_gitlab_js" %}<script src="{{ ASSET_URL }}"></script>{% endassets %}
+<script type="text/javascript">
+require(['jquery', 'js/gitlab/view'], function($, view) {
+  $(document).ready(function(){
+    view({
+      hook_url: "{{url_for('invenio_gitlab.hook')}}",
+      sync_url: "{{url_for('invenio_gitlab.index')}}",
+      sync_button: "button[name='sync-repos']",
+      github_view: ".gitlab-panels"
+    });
+  });
+});
+</script>
+{%- endblock %}
+{%- endif %}
+
+{%- block settings_content %}
+<div class="gitlab-panels">
+{%- if connected %}
+{{ helpers.panel_start(
+  _('GitLab Projects'),
+  with_body=False,
+  icon="fa fa-gitlab",
+  btn='Sync now ...',
+  btn_icon='fa fa-refresh',
+  btn_name='sync-repos',
+  btn_text=_('(updated %(last_sync)s) ', last_sync=last_sync),
+  id="gitlab-view",
+) }}
+<div class="panel-body">
+  <h1 align="center"><i class="fa fa-gitlab"></i> Get started</h1>
+  <div class="row">
+    <div class="col-md-4">
+      <h2><strong>1</strong> <small>Flip the switch</small></h2>
+      <hr>
+      Select the project you want to preserve, and toggle
+      the switch below to turn on automatic preservation of your software.
+    </div>
+    <div class="col-md-4">
+      <h2><strong>2</strong> <small>Create a new version tag</small></h2>
+      <hr>
+      Go to GitLab and <a href="https://docs.gitlab.com/ee/workflow/releases.html">create a new version tag</a>.
+      {{config.THEME_SITENAME | default('System') }} will automatically download
+      a .zip-ball of each new release and register a DOI.
+    </div>
+    <div class="col-md-4">
+      <h2><strong>3</strong> <small>Get the badge</small></h2>
+      <hr>
+      After your first release, a DOI badge that you can include in GitLab
+      README will appear next to your project below.
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-4" align="center">
+      <br/>
+      <input type="checkbox" checked data-size="large" data-animate="true" name="test-flip">
+    </div>
+    <div class="col-md-4">
+    </div>
+    <div class="col-md-4" align="center">
+      <br>
+      <a href="https://doi.org/10.14278/rodare.8475"><img src="{{ url_for('invenio_formatter_badges.badge', title='doi', value='10.14278/rodare.8475', ext='svg') }}" alt="10.14278/rodare.8475"></a><br><small class="text-muted">(example)</small>
+    </div>
+  </div>
+</div>
+
+{{ helpers.panel_end(with_body=False) }}
+{%- if projects %}
+  {%- for project_id, project in projects if project.instance and project.instance.hook %}
+    {%- if loop.first %}
+      {{ helpers.panel_start(_('Enabled Projects'), with_body=False) }}
+    {%- endif %}
+    {% include "invenio_gitlab/settings/index_item.html" with context %}
+    {%- if loop.last %}
+      {{ helpers.panel_end(with_body=False) }}
+    {%- endif %}
+  {%- endfor %}
+{% endif %}
+
+
+{{ helpers.panel_start(_('Projects'), with_body=False) }}
+<div class="panel-body">
+  <p>
+    <small class="text-muted">
+    Below you find a list of projects you own in GitLab. You can only preserve
+    projects you are the owner of.
+    </small>
+  </p>
+</div>
+{%- if not projects %}
+<div class="panel-body">
+  <p>
+    You have no repositories on GitLab.<br>
+    Go to <a href="{{config.GITLAB_BASE_URL}}/projects/new">GitLab</a> and create your first or
+    click Sync-button to synchronize latest changes from GitLab.
+  </p>
+</div>
+{%- else %}
+  {%- for project_id, project in projects if not project.instance or not project.instance.hook %}
+    {%- if loop.first %}
+    <hr />
+    {%- endif %}
+    {% include "invenio_gitlab/settings/index_item.html" with context %}
+  {%- endfor %}
+{% endif %}
+{{ helpers.panel_end(with_body=False) }}
+
+{#- If the user has not connected his GitLab account... #}
+{%- else %}
+{{ helpers.panel_start(
+  _('GitLab'),
+  icon="fa fa-gitlab",
+) }}
+<div class="row" align="center">
+  <h1>{{ _('Software preservation made simple!') }}</h1>
+  <p class="lead">
+  <a href="{{url_for('invenio_oauthclient.login', remote_app='gitlab', next=url_for('invenio_gitlab.index'))}}"
+     id="connect-to-gitlab" class="btn btn-default btn-lg">
+    <i class="fa fa-gitlab fa-lg"></i> {{ _('Connect') }}
+  </a>
+  </p>
+  <p class="text-muted">
+  {{ _('To get started, click "Connect" and we will get a list of your projects from GitLab.') }}
+  </p>
+</div>
+{{ helpers.panel_end() }}
+{%- endif %}
+</div>
+{%- endblock %}

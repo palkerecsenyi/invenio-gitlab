@@ -1,0 +1,98 @@
+$gitlab-received-color: #edde3f;
+$gitlab-received-color-text: darken($gitlab-received-color, 17%);
+$gitlab-processing-color: $gitlab-received-color;
+$gitlab-processing-color-text: darken($gitlab-processing-color, 17%);
+$gitlab-failed-color: #db4545;
+$gitlab-failed-color-text: darken($gitlab-failed-color, 17%);
+$gitlab-deleted-color: #db4545;
+$gitlab-deleted-color-text: darken($gitlab-deleted-color, 17%);
+$gitlab-published-color: #39aa56;
+$gitlab-published-color-text: darken($gitlab-published-color, 17%);
+
+@mixin status-border($color) {
+    background: linear-gradient(
+        to right,
+        $color 0,
+        $color 10px,
+        #fff 10px,
+        #fff 100%
+    ) no-repeat;
+}
+
+@mixin status-styling($color) {
+    h5 {
+        color: $color;
+        a {
+            color: $color;
+        }
+    }
+}
+
+.gitlab-panels {
+    /* Repositories list page */
+    table#gitlab-repositories td.hook-toggle {
+      vertical-align: middle;
+    }
+
+    a#connect-to-gitlab {
+        margin-top: 40px;
+        margin-bottom: 40px;
+    }
+
+    /* Release page */
+    .jumbotron {
+        background-color: transparent;
+
+        .row.buttons {
+            margin-top: 40px;
+        }
+    }
+
+    h1, h5 {
+        margin-top: 0;
+    }
+
+    hr {
+        margin-top: 0px;
+        margin-bottom: 2px;
+    }
+
+    .switch {
+        margin-top: 7px;
+    }
+
+    .release {
+        padding-left: 20px;
+    }
+    .release.received {
+        @include status-border($gitlab-received-color);
+    }
+    .release.processing {
+        @include status-border($gitlab-processing-color);
+    }
+    .release.published {
+        @include status-border($gitlab-published-color);
+    }
+    .release.failed {
+        @include status-border($gitlab-failed-color);
+    }
+    .release.deleted {
+        @include status-border($gitlab-deleted-color);
+    }
+
+    .received {
+        @include status-styling($gitlab-received-color-text);
+    }
+    .processing {
+        @include status-styling($gitlab-processing-color-text);
+    }
+    .published {
+        @include status-styling($gitlab-published-color-text);
+    }
+    .failed {
+        @include status-styling($gitlab-failed-color-text);
+    }
+    .deleted {
+        @include status-styling($gitlab-deleted-color-text);
+    }
+}

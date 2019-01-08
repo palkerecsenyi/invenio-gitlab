@@ -39,6 +39,14 @@ class InvenioGitLab(object):
 
     def init_config(self, app):
         """Initialize configuration."""
+        app.config.setdefault(
+            'GITLAB_BASE_TEMPLATE',
+            app.config.get('BASE_TEMPLATE',
+                           'invenio_gitlab/base.html'))
+        app.config.setdefault(
+            'GITLAB_SETTINGS_TEMPLATE',
+            app.config.get('SETTINGS_TEMPLATE',
+                           'invenio_gitlab/settings/base.html'))
         for k in dir(config):
             if k.startswith('GITLAB_'):
                 app.config.setdefault(k, getattr(config, k))

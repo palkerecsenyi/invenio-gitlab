@@ -57,10 +57,29 @@ from __future__ import absolute_import, print_function
 
 from flask import Flask
 from flask_babelex import Babel
+from flask_menu import Menu as FlaskMenu
+from invenio_accounts import InvenioAccounts
+from invenio_assets import InvenioAssets
+from invenio_db import InvenioDB
+from invenio_oauth2server import InvenioOAuth2Server
+from invenio_oauthclient import InvenioOAuthClient
+from invenio_theme import InvenioTheme
 
 from invenio_gitlab import InvenioGitLab
 
 # Create Flask application
 app = Flask(__name__)
+
+app.config.update(
+    SQLALCHEMY_DATABASE_URI=os.getenv('SQLALCHEMY_DATABASE_URI',
+                                      'sqlite:///test.db'),
+    TESTING=True,
+)
+
 Babel(app)
+InvenioDB(app)
+InvenioAssets(app)
+InvenioTheme(app)
+InvenioOAuthClient(app)
+InvenioOAuth2Server(app)
 InvenioGitLab(app)

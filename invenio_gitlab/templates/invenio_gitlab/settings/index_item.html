@@ -1,0 +1,22 @@
+{%- set doi_url = None %}
+{%- set release = project.get('latest') %}
+<div class="panel-body release {{release.model.status.title|lower if release.model else ''}}">
+  <div class="row">
+    <div class="col-md-9">
+      <h4>
+        <a href="{{config.GITLAB_BASE_URL}}/{{project.full_name}}" data-toggle="tooltip" title="{{ _('Go to GitLab.') }}">
+          <i class="fa fa-gitlab text-muted"></i>
+        </a>
+        <a href="#">{{ project.full_name }}</a>
+      </h4>
+    </div>
+    <div class="col-md-3">
+      <span class="pull-right switch">
+        {{helpers.repo_switch(project.instance, project_id)}}
+      </span>
+    </div>
+  </div>
+</div>
+{%- if not loop.last %}
+<hr />
+{%- endif %}

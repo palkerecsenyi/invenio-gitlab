@@ -34,6 +34,7 @@ from flask_mail import Mail
 from flask_menu import Menu as FlaskMenu
 from flask_oauthlib.client import OAuth as FlaskOAuth
 from invenio_accounts import InvenioAccounts
+from invenio_assets import InvenioAssets
 from invenio_db import InvenioDB
 from invenio_db import db as db_
 from invenio_oauth2server import InvenioOAuth2Server
@@ -96,6 +97,7 @@ def base_app(instance_path):
     InvenioDB(app_)
     InvenioAccounts(app_)
     Mail(app_)
+    InvenioAssets(app_)
     FlaskMenu(app_)
     InvenioWebhooks(app_)
     celeryext.celery.flask_app = app_  # Make sure both apps are the same!

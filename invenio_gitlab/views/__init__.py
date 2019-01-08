@@ -17,27 +17,4 @@
 # You should have received a copy of the GNU General Public License
 # along with Rodare. If not, see <http://www.gnu.org/licenses/>.
 
-"""Utility functions for Invenio-GitLab."""
-
-from datetime import datetime
-
-import dateutil.parser
-import pytz
-
-
-def utcnow():
-    """UTC timestamp (with timezone)."""
-    return datetime.now(tz=pytz.utc)
-
-
-def iso_utcnow():
-    """UTC ISO8601 formatted timestamp."""
-    return utcnow().isoformat()
-
-
-def parse_timestamp(x):
-    """Parse ISO8601 formatted timestamp."""
-    dt = dateutil.parser.parse(x)
-    if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=pytz.utc)
-    return dt
+"""View functions for Invenio-GitLab."""
