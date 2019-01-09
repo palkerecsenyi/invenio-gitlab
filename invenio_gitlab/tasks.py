@@ -24,11 +24,11 @@ from __future__ import absolute_import
 import json
 
 from celery import shared_task
-from flask import current_app
+from flask import current_app, g
 
 
 @shared_task(ignore_result=True)
-def process_release(release_id, verify_sender=False):
+def process_release(tag, project_id, verify_sender=False):
     """Process a received release from GitLab."""
     from invenio_db import db
     from invenio_rest.errors import RESTException
@@ -38,7 +38,8 @@ def process_release(release_id, verify_sender=False):
     from .proxies import current_gitlab
 
     release_model = Release.query.filter(
-        Release.release_id == release_id,
+        Release.tag == tag,
+        Release.project_id == project_id,
         Release.status.in_([ReleaseStatus.RECEIVED, ReleaseStatus.FAILED]),
     ).one()
     release_model.status = ReleaseStatus.PROCESSING
@@ -60,7 +61,7 @@ def process_release(release_id, verify_sender=False):
 
     try:
         release.publish()
-        release.models.status = ReleaseStatus.PUBLISHED
+        release.model.status = ReleaseStatus.PUBLISHED
     except RESTException as rest_ex:
         release.model.errors = json.loads(rest_ex.get_body())
         release.model.status = ReleaseStatus.FAILED

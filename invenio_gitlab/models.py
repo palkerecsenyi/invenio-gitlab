@@ -275,6 +275,9 @@ class Release(db.Model, Timestamp):
     recordmetadata = db.relationship(RecordMetadata, backref='gitlab_releases')
     event = db.relationship(Event)
 
+    __table_args__ = (db.UniqueConstraint('tag', 'project_id'),)
+    """Only allow the same tag once per project."""
+
     @classmethod
     def create(cls, event):
         """Create a new release model."""
@@ -286,7 +289,8 @@ class Release(db.Model, Timestamp):
         if not rex.match(tag):
             return
         # Check, if the release has already been processed.
-        existing_release = Release.query.filter_by(tag=tag).first()
+        existing_release = Release.query.filter_by(
+            tag=tag, project_id=project_id).first()
         if existing_release:
             raise ReleaseAlreadyReceivedError(
                 u'{release} has already been received.'
@@ -312,6 +316,22 @@ class Release(db.Model, Timestamp):
                 '{project} is not enabled for webhooks.'.format(
                     project=project)
             )
+
+    @property
+    def record(self):
+        """Get record object."""
+        if self.recordmetadata:
+            return Record(self.recordmetadata.json, model=self.recordmetadata)
+        else:
+            return None
+
+    @property
+    def deposit_id(self):
+        """Get deposit identifier."""
+        if self.record and '_deposit' in self.record:
+            return self.record['_deposit']['id']
+        else:
+            return None
 
     def __repr__(self):
         """Get release representation."""

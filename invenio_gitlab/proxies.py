@@ -23,5 +23,5 @@ from flask import current_app
 from werkzeug.local import LocalProxy
 
 current_gitlab = LocalProxy(
-    lambda: current_app.extenstions['invenio-gitlab']
+    lambda: current_app.extensions['invenio-gitlab']
 )
