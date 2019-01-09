@@ -27,6 +27,7 @@ from invenio_webhooks.models import Receiver
 from .errors import InvalidRegexError, ProjectAccessError, \
     ProjectDisabledError, ReleaseAlreadyReceivedError
 from .models import Release
+from .tasks import process_release
 
 
 class GitLabReceiver(Receiver):
@@ -44,8 +45,11 @@ class GitLabReceiver(Receiver):
                 release = Release.create(event)
                 db.session.commit()
 
-                # TODO: Process the release in Celery task here.
-
+                process_release.delay(
+                    release.tag,
+                    str(release.project_id),
+                    verify_sender=self.verify_sender,
+                )
             except (InvalidRegexError,
                     ReleaseAlreadyReceivedError,
                     ProjectDisabledError) as e:

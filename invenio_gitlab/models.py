@@ -290,7 +290,7 @@ class Release(db.Model, Timestamp):
             return
         # Check, if the release has already been processed.
         existing_release = Release.query.filter_by(
-            tag=tag, project_id=project_id).first()
+            tag=tag, project_id=project.id).first()
         if existing_release:
             raise ReleaseAlreadyReceivedError(
                 u'{release} has already been received.'
@@ -307,6 +307,7 @@ class Release(db.Model, Timestamp):
                     status=ReleaseStatus.RECEIVED,
                 )
                 db.session.add(release)
+            return release
         else:
             current_app.logger.warning(
                 'Release creation attempt on disabled {project}.'
