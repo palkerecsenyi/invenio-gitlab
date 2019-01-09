@@ -29,7 +29,7 @@ from flask_login import current_user, login_required
 from flask_menu import register_menu
 from invenio_db import db
 
-from ..api import GitLabAPI
+from ..api import GitLabAPI, GitLabRelease
 from ..models import Project
 from ..utils import parse_timestamp, utcnow
 
@@ -80,8 +80,8 @@ def index():
             ).all()
             for project in db_projects:
                 projects[str(project.gitlab_id)]['instance'] = project
-                # TODO: add latest Release here
-                projects[str(project.gitlab_id)]['latest'] = None
+                projects[str(project.gitlab_id)]['latest'] = GitLabRelease(
+                    project.latest_release())
 
         last_sync = humanize.naturaltime(
             (utcnow() - parse_timestamp(extra_data['last_sync'])))

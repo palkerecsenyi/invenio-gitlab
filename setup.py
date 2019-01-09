@@ -111,6 +111,7 @@ setup(
             'invenio_gitlab = invenio_gitlab:InvenioGitLab',
         ],
         'invenio_base.blueprints': [
+            'invenio_gitlab_badge = invenio_gitlab.views.badge:blueprint',
             'invenio_gitlab_settings = invenio_gitlab.views.gitlab:blueprint',
         ],
         'invenio_i18n.translations': [

@@ -1,3 +1,4 @@
+{%- from "invenio_gitlab/helpers.html" import doi_badge with context -%}
 {%- set doi_url = None %}
 {%- set release = project.get('latest') %}
 <div class="panel-body release {{release.model.status.title|lower if release.model else ''}}">
@@ -9,6 +10,11 @@
         </a>
         <a href="#">{{ project.full_name }}</a>
       </h4>
+      {%- if release.pid %}
+      <p>
+        {{ doi_badge(release.pid.pid_value, gitlab_id=project_id) }}
+      </p>
+      {%- endif %}
     </div>
     <div class="col-md-3">
       <span class="pull-right switch">
