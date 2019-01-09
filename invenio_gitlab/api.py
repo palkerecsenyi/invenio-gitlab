@@ -327,9 +327,10 @@ class GitLabRelease(object):
     def filename(self):
         """Extract files to download from the GitLab payload."""
         tag_name = self.event.payload['ref'].split('refs/tags/')[1]
-        project_name = self.project['path_with_namespace']
+        # Only use project part of path for filename
+        project_name = self.project['path_with_namespace'].split['/'][-1]
 
-        filename = u'{name}-{tag}.tar.gz'.format(
+        filename = u'{name}-{tag}.zip'.format(
             name=project_name, tag=tag_name)
 
         return filename
