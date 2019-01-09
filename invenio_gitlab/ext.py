@@ -21,7 +21,12 @@
 
 from __future__ import absolute_import, print_function
 
+from flask import current_app
+from six import string_types
+from werkzeug.utils import cached_property, import_string
+
 from . import config
+from .api import GitLabRelease
 
 
 class InvenioGitLab(object):
@@ -31,6 +36,15 @@ class InvenioGitLab(object):
         """Extension initialization."""
         if app:
             self.init_app(app)
+
+    @cached_property
+    def release_api_class(self):
+        """Gitlab release API class."""
+        cls = current_app.config['GITLAB_RELEASE_CLASS']
+        if isinstance(cls, string_types):
+            cls = import_string(cls)
+        assert issubclass(cls, GitLabRelease)
+        return cls
 
     def init_app(self, app):
         """Flask application initialization."""

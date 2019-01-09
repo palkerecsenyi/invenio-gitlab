@@ -69,14 +69,17 @@ setup_requires = [
 install_requires = [
     'Flask>=0.11.1',
     'Flask-BabelEx>=0.9.2',
+    'Flask-OAuthlib>=0.9.3',
     'humanize>=0.5.1',
     'invenio-accounts>=1.0.0',
     'invenio-assets>=1.0.0',
+    'invenio-celery>=1.0.0',
+    'invenio-deposit>=1.0.0a9',
     'invenio-oauthclient>=1.0.0',
     'invenio-oauth2server>=1.0.0',
+    'invenio-pidstore>=1.0.0',
     'invenio-records>=1.0.0',
     'invenio-webhooks>=1.0.0a4',
-    'oauthlib>=2.0.0,<3.0.0',
     'python-gitlab>=1.7.0',
 ]
 
@@ -112,6 +115,9 @@ setup(
         ],
         'invenio_i18n.translations': [
             'messages = invenio_gitlab',
+        ],
+        'invenio_celery.tasks': [
+            'invenio_gitlab = invenio_gitlab.tasks',
         ],
         'invenio_db.models': [
             'invenio_gitlab = invenio_gitlab.models',

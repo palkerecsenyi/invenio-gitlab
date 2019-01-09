@@ -62,6 +62,15 @@ This variable must be set explicitly. Example:
 GITLAB_DEPOSIT_CLASS = 'invenio_deposit.api:Deposit'
 """Deposit class that implements a `publish` method."""
 
+GITLAB_RELEASE_CLASS = 'invenio_gitlab.api:GitLabRelease'
+"""GitLab API class used for release handling."""
+
+GITLAB_RECORD_SERIALIZER = None
+"""Serializer to use to display record metadata."""
+
+GITLAB_PID_FETCHER = 'recid'
+"""PID Fetcher for Release records."""
+
 GITLAB_WEBHOOK_RECEIVER_ID = 'gitlab'
 """Local name of webhook receiver."""
 

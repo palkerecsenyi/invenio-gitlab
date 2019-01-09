@@ -17,28 +17,11 @@
 # You should have received a copy of the GNU General Public License
 # along with Rodare. If not, see <http://www.gnu.org/licenses/>.
 
-"""Invenio-GitLab errors."""
+"""Proxy for current gitlab extension."""
 
+from flask import current_app
+from werkzeug.local import LocalProxy
 
-class GitLabError(Exception):
-    """General GitLab error."""
-
-
-class InvalidSenderError(GitLabError):
-    """Invalid release sender error."""
-
-
-class ProjectDisabledError(GitLabError):
-    """Tried to create Release, but Project is disabled."""
-
-
-class ProjectAccessError(GitLabError):
-    """Project access permissions error."""
-
-
-class ReleaseAlreadyReceivedError(GitLabError):
-    """Release already processed."""
-
-
-class InvalidRegexError(GitLabError):
-    """Invalid regular expression error."""
+current_gitlab = LocalProxy(
+    lambda: current_app.extenstions['invenio-gitlab']
+)

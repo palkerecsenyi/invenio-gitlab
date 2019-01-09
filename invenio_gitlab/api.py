@@ -28,11 +28,12 @@ from invenio_oauth2server.models import Token as ProviderToken
 from invenio_oauthclient.handlers import token_getter
 from invenio_oauthclient.models import RemoteAccount, RemoteToken
 from invenio_oauthclient.proxies import current_oauthclient
+from invenio_pidstore import current_pidstore
 from six import string_types
 from werkzeug.local import LocalProxy
 from werkzeug.utils import cached_property, import_string
 
-from .models import Project
+from .models import Project, ReleaseStatus
 from .utils import iso_utcnow, parse_timestamp, utcnow
 
 
@@ -341,9 +342,28 @@ class GitLabRelease(object):
         return output
 
     @cached_property
+    def record(self):
+        """Get release record."""
+        return self.model.record
+
+    @cached_property
     def status(self):
         """Return the release status of the model."""
         return self.model.status
+
+    @cached_property
+    def pid(self):
+        """Get PID object for the release record."""
+        if self.model.status == ReleaseStatus.PUBLISHED and self.record:
+            fetcher = current_pidstore.fetchers[
+                current_app.config.get('GITLAB_PID_FETCHER')
+            ]
+            return fetcher(self.record.id, self.record)
+
+    def verify_sender(self):
+        """Check if the sender is valid."""
+        return self.project['path_with_namespace'] in \
+            self.gl.account.extra_data['projects']
 
     def publish(self):
         """Publish GitLab release as a record."""
