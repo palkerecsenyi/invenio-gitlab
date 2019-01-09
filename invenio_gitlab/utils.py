@@ -41,3 +41,18 @@ def parse_timestamp(x):
     if dt.tzinfo is None:
         dt = dt.replace(tzinfo=pytz.utc)
     return dt
+
+
+def get_contributors(gl, project_id):
+    """Return contributors of GitLab project."""
+    try:
+        contributors = []
+        for contributor in project.repository_contributors(as_list=False):
+            if contributor['name']:
+                contributors.append(dict(
+                    name=contributor['name'],
+                    affiliation='',
+                ))
+        return contributors
+    except Exception:
+        return None
