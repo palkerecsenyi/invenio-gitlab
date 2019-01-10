@@ -8,7 +8,7 @@
         <a href="{{config.GITLAB_BASE_URL}}/{{project.full_name}}" data-toggle="tooltip" title="{{ _('Go to GitLab.') }}">
           <i class="fa fa-gitlab text-muted"></i>
         </a>
-        <a href="#">{{ project.full_name }}</a>
+        <a href="{{ url_for('.project', name=project.full_name) }}">{{ project.full_name }}</a>
       </h4>
       {%- if release.pid %}
       <p>

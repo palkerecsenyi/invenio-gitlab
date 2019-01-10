@@ -76,3 +76,6 @@ GITLAB_WEBHOOK_RECEIVER_ID = 'gitlab'
 
 GITLAB_TEMPLATE_INDEX = 'invenio_gitlab/settings/index.html'
 """GitLab settings view index template."""
+
+GITLAB_TEMPLATE_VIEW = 'invenio_gitlab/settings/view.html'
+"""Project detail view template."""

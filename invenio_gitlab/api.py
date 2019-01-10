@@ -29,6 +29,7 @@ from invenio_oauthclient.handlers import token_getter
 from invenio_oauthclient.models import RemoteAccount, RemoteToken
 from invenio_oauthclient.proxies import current_oauthclient
 from invenio_pidstore import current_pidstore
+from invenio_pidstore.models import PersistentIdentifier
 from six import string_types
 from werkzeug.local import LocalProxy
 from werkzeug.utils import cached_property, import_string
@@ -359,7 +360,9 @@ class GitLabRelease(object):
             fetcher = current_pidstore.fetchers[
                 current_app.config.get('GITLAB_PID_FETCHER')
             ]
-            return fetcher(self.record.id, self.record)
+            fetched_pid = fetcher(self.record.id, self.record)
+            return PersistentIdentifier(pid_type='doi',
+                                        pid_value=fetched_pid.pid_value)
 
     def verify_sender(self):
         """Check if the sender is valid."""

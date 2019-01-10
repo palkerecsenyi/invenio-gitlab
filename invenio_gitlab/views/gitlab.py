@@ -21,16 +21,24 @@
 
 from __future__ import absolute_import
 
+import json
+from datetime import datetime
+
 import humanize
+import pytz
+from dateutil.parser import parse
 from flask import Blueprint, abort, current_app, render_template, request
 from flask_babelex import gettext as _
 from flask_breadcrumbs import register_breadcrumb
 from flask_login import current_user, login_required
 from flask_menu import register_menu
 from invenio_db import db
+from sqlalchemy.orm.exc import NoResultFound
 
 from ..api import GitLabAPI, GitLabRelease
-from ..models import Project
+from ..errors import ProjectAccessError
+from ..models import Project, Release
+from ..proxies import current_gitlab
 from ..utils import parse_timestamp, utcnow
 
 blueprint = Blueprint(
@@ -40,6 +48,31 @@ blueprint = Blueprint(
     template_folder='../templates',
     url_prefix='/account/settings/gitlab',
 )
+
+
+#
+# Template filters
+#
+@blueprint.app_template_filter('naturaltime')
+def naturaltime(val):
+    """Get humanized version of time."""
+    val = val.replace(tzinfo=pytz.utc) \
+        if isinstance(val, datetime) else parse(val)
+    now = datetime.utcnow().replace(tzinfo=pytz.utc)
+
+    return humanize.naturaltime(now - val)
+
+
+@blueprint.app_template_filter('prettyjson')
+def prettyjson(val):
+    """Get pretty-printed json."""
+    return json.dumps(json.loads(val), indent=4)
+
+
+@blueprint.app_template_filter('release_pid')
+def release_pid(release):
+    """Get PID of Release record."""
+    return GitLabRelease(release).pid
 
 
 #
@@ -93,6 +126,46 @@ def index():
             'last_sync': last_sync,
         })
     return render_template(current_app.config['GITLAB_TEMPLATE_INDEX'], **ctx)
+
+
+@blueprint.route('/project/<path:name>')
+@login_required
+@register_breadcrumb(blueprint, 'breadcrumbs.settings.gitlab.project',
+                     _('Project'))
+def project(name):
+    """Display selected project."""
+    user_id = current_user.id
+    gitlab = GitLabAPI(user_id=user_id)
+    token = gitlab.session_token
+    if token:
+        projects = gitlab.account.extra_data.get('projects', [])
+        project = next((project for project_id, project in projects.items()
+                        if project.get('full_name') == name), {})
+        if not project:
+            abort(403)
+
+        try:
+            project_instance = Project.get(user_id=user_id,
+                                           gitlab_id=project['id'],
+                                           check_owner=False)
+        except ProjectAccessError:
+            abort(403)
+        except NoResultFound:
+            project_instance = Project(name=project['full_name'],
+                                       gitlab_id=project['id'])
+        releases = [
+            current_gitlab.release_api_class(r) for r in (
+                project_instance.releases.order_by(
+                    db.desc(Release.created)).all()
+                if project_instance.id else []
+            )
+        ]
+    return render_template(
+        current_app.config['GITLAB_TEMPLATE_VIEW'],
+        project=project_instance,
+        releases=releases,
+        serializer=current_gitlab.record_serializer,
+    )
 
 
 @blueprint.route('/hook', methods=['POST', 'DELETE'])
