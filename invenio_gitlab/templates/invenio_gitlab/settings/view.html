@@ -26,7 +26,7 @@ require(['jquery', 'js/gitlab/view'], function($, view) {
 {%- endblock %}
 
 {%- block settings_content %}
-{%- set gitlab_rel_url = 'https://gitlab.com/{0}/tags/new'.format(project.name) %}
+{%- set gitlab_rel_url = '{0}/{1}/tags/new'.format(config.GITLAB_BASE_URL, project.name) %}
 {%- set latest_success_pid = None %}
 {%- set latest_published = project.latest_release(status='D') %}
 {%- if latest_published %}
@@ -113,7 +113,7 @@ require(['jquery', 'js/gitlab/view'], function($, view) {
               </p>
               {%- endif %}
               <p>
-                <a href="{{'https://gitlab.com/{0}/tags/{1}'.format(project.name, release.model.tag)}}" class="text-muted">
+                <a href="{{'{0}/{1}/tags/{2}'.format(config.GITLAB_BASE_URL, project.name, release.model.tag)}}" class="text-muted">
                   <i class="fa fa-fw fa-gitlab"></i>
                   {{release.model.tag}}
                 </a>
@@ -170,12 +170,12 @@ require(['jquery', 'js/gitlab/view'], function($, view) {
             <p>
             <small class="text-muted">
               {{config.THEME_SITENAME | default('Invenio')}} automatically
-              extracts metadata about your repository from GitHub APIs.
+              extracts metadata about your repository from GitLab APIs.
               For example, the authors are determined from the
               repository's contributor statistics.
               The automatic extraction is <strong>solely a best
               guess</strong>. Add a
-              <code>{{config.GITHUB_METADATA_FILE}}</code> file the root of
+              <code>{{config.GITLAB_METADATA_FILE}}</code> file the root of
               your repository to explicit define the metadata. The format of
               file is the same as for our REST API (use e.g. below JSON to
               get started).

@@ -39,6 +39,9 @@ Never set this to True in a production environment. It is only useful for
 development and integration servers.
 """
 
+GITLAB_METADATA_FILE = '.invenio.json'
+"""File with extra metadata stored in the root of the imported repository."""
+
 GITLAB_REFRESH_TIMEDELTA = timedelta(days=1)
 """Time period after which a GitLab account sync should be initiated."""
 

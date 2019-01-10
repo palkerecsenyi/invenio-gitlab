@@ -19,10 +19,17 @@
 
 """Utility functions for Invenio-GitLab."""
 
+from __future__ import absolute_import
+
+import base64
+import json
 from datetime import datetime
 
 import dateutil.parser
 import pytz
+from flask import current_app
+
+from .errors import CustomGitLabMetadataError
 
 
 def utcnow():
@@ -47,6 +54,7 @@ def get_contributors(gl, project_id):
     """Return contributors of GitLab project."""
     try:
         contributors = []
+        project = gl.api.projects.get(project_id)
         for contributor in project.repository_contributors(as_list=False):
             if contributor['name']:
                 contributors.append(dict(
@@ -56,3 +64,24 @@ def get_contributors(gl, project_id):
         return contributors
     except Exception:
         return None
+
+
+def get_extra_metadata(gl, project_id, tag):
+    """Extract extra metadata from the metadata file."""
+    try:
+        project = gl.api.projects.get(project_id)
+        items = project.repository_tree(ref=tag)
+        file_id = [element['id'] for element in items if element['name'] ==
+                   current_app.config['GITLAB_METADATA_FILE']][0]
+        if file_id:
+            file_info = project.repository_blob(file_id)
+            content = base64.b64decode(file_info['content'])
+            if not content:
+                return {}
+            return json.loads(content.decode('utf-8'))
+        return {}
+    except ValueError:
+        raise CustomGitLabMetadataError(
+            u'Metadata file "{file}" is not valid JSON.'
+            .format(file=current_app.config['GITHUB_METADATA_FILE'])
+        )

@@ -35,7 +35,7 @@ from werkzeug.local import LocalProxy
 from werkzeug.utils import cached_property, import_string
 
 from .models import Project, ReleaseStatus
-from .utils import iso_utcnow, parse_timestamp, utcnow
+from .utils import get_extra_metadata, iso_utcnow, parse_timestamp, utcnow
 
 
 class GitLabAPI(object):
@@ -325,6 +325,15 @@ class GitLabRelease(object):
         )
 
     @cached_property
+    def extra_metadata(self):
+        """Get extra metadata from the metadata file."""
+        return get_extra_metadata(
+            self.gl,
+            self.payload['project_id'],
+            self.tag['name'],
+        )
+
+    @cached_property
     def filename(self):
         """Extract files to download from the GitLab payload."""
         tag_name = self.event.payload['ref'].split('refs/tags/')[1]
@@ -340,7 +349,7 @@ class GitLabRelease(object):
     def metadata(self):
         """Return extracted metadata."""
         output = dict(self.defaults)
-        # TODO: update metadata with additional metadata here
+        output.update(self.extra_metadata)
         return output
 
     @cached_property

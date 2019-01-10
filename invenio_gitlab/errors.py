@@ -42,3 +42,7 @@ class ReleaseAlreadyReceivedError(GitLabError):
 
 class InvalidRegexError(GitLabError):
     """Invalid regular expression error."""
+
+
+class CustomGitLabMetadataError(GitLabError):
+    """GitLab metadata file is not valid JSON."""
