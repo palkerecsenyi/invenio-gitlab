@@ -80,6 +80,7 @@ install_requires = [
     'invenio-pidstore>=1.0.0',
     'invenio-records>=1.0.0',
     'invenio-webhooks>=1.0.0a4',
+    'mistune>=0.8.3',
     'python-gitlab>=1.7.0',
 ]
 

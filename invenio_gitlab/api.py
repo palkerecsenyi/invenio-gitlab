@@ -35,7 +35,8 @@ from werkzeug.local import LocalProxy
 from werkzeug.utils import cached_property, import_string
 
 from .models import Project, ReleaseStatus
-from .utils import iso_utcnow, parse_timestamp, utcnow
+from .utils import get_description_from_readme, iso_utcnow, parse_timestamp, \
+    utcnow
 
 
 class GitLabAPI(object):
@@ -298,6 +299,10 @@ class GitLabRelease(object):
     @cached_property
     def description(self):
         """Return project description."""
+        description = get_description_from_readme(
+            self.gl, self.payload['project_id'], self.tag['name'])
+        if description:
+            return description
         return self.project['description']
 
     @cached_property

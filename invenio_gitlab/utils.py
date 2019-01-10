@@ -19,9 +19,11 @@
 
 """Utility functions for Invenio-GitLab."""
 
+import base64
 from datetime import datetime
 
 import dateutil.parser
+import mistune
 import pytz
 
 
@@ -47,6 +49,7 @@ def get_contributors(gl, project_id):
     """Return contributors of GitLab project."""
     try:
         contributors = []
+        project = gl.api.projects.get(project_id)
         for contributor in project.repository_contributors(as_list=False):
             if contributor['name']:
                 contributors.append(dict(
@@ -56,3 +59,17 @@ def get_contributors(gl, project_id):
         return contributors
     except Exception:
         return None
+
+
+def get_description_from_readme(gl, project_id, tag):
+    """Get the description content from the README file."""
+    project = gl.api.projects.get(project_id)
+    items = project.repository_tree(ref=tag)
+    file_id = [element['id']
+               for element in items if element['name'] == 'README.md'][0]
+    if file_id:
+        file_info = project.repository_blob(file_id)
+        markdown_input = base64.b64decode(file_info['content']).decode('utf-8')
+        markdown = mistune.Markdown()
+        return markdown(markdown_input)
+    return None
