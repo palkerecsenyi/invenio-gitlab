@@ -71,8 +71,12 @@ def get_extra_metadata(gl, project_id, tag):
     try:
         project = gl.api.projects.get(project_id)
         items = project.repository_tree(ref=tag)
-        file_id = [element['id'] for element in items if element['name'] ==
-                   current_app.config['GITLAB_METADATA_FILE']][0]
+        try:
+            file_id = [element['id'] for element in items if
+                       element['name'] ==
+                       current_app.config['GITLAB_METADATA_FILE']][0]
+        except IndexError:
+            file_id = None
         if file_id:
             file_info = project.repository_blob(file_id)
             content = base64.b64decode(file_info['content'])
@@ -83,5 +87,5 @@ def get_extra_metadata(gl, project_id, tag):
     except ValueError:
         raise CustomGitLabMetadataError(
             u'Metadata file "{file}" is not valid JSON.'
-            .format(file=current_app.config['GITHUB_METADATA_FILE'])
+            .format(file=current_app.config['GITLAB_METADATA_FILE'])
         )
