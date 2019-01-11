@@ -21,7 +21,9 @@
 
 from __future__ import absolute_import, print_function
 
+import pytest
 from flask import Flask
+from invenio_db.utils import drop_alembic_version_table
 
 from invenio_gitlab import InvenioGitLab
 
@@ -43,3 +45,24 @@ def test_init():
     assert 'invenio-gitlab' not in app.extensions
     ext.init_app(app)
     assert 'invenio-gitlab' in app.extensions
+
+
+def test_alembic(app, db):
+    """Test alembic recipes."""
+    ext = app.extensions['invenio-db']
+
+    if db.engine.name == 'sqlite':
+        raise pytest.skip('Upgrades are not supported on SQLite.')
+
+    assert not ext.alembic.compare_metadata()
+    db.drop_all()
+    drop_alembic_version_table()
+    ext.alembic.upgrade()
+
+    assert not ext.alembic.compare_metadata()
+    ext.alembic.stamp()
+    ext.alembic.downgrade(target='96e796392533')
+    ext.alembic.upgrade()
+
+    assert not ext.alembic.compare_metadata()
+    drop_alembic_version_table()

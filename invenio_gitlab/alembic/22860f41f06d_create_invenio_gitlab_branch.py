@@ -17,26 +17,23 @@
 # You should have received a copy of the GNU General Public License
 # along with Rodare. If not, see <http://www.gnu.org/licenses/>.
 
-include *.rst
-include *.sh
-include *.txt
-include *.yml
-include .dockerignore
-include .editorconfig
-include .tx/config
-include LICENSE
-include babel.ini
-include pytest.ini
-recursive-include docs *.bat
-recursive-include docs *.py
-recursive-include docs *.rst
-recursive-include docs *.txt
-recursive-include docs Makefile
-recursive-include examples *.py
-recursive-include examples *.sh
-recursive-include invenio_gitlab *.html
-recursive-include invenio_gitlab *.js
-recursive-include invenio_gitlab *.py
-recursive-include invenio_gitlab *.scss
-recursive-include tests *.py
-recursive-include tests *.json
+"""Create invenio-gitlab branch."""
+
+import sqlalchemy as sa
+from alembic import op
+
+# revision identifier used by Alembic.
+revision = '22860f41f06d'
+down_revision = None
+branch_labels = (u'invenio_gitlab',)
+depends_on = 'dbdbc1b19cf2'
+
+
+def upgrade():
+    """Upgrade database."""
+    pass
+
+
+def downgrade():
+    """Downgrade database."""
+    pass

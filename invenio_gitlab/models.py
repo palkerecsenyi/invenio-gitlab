@@ -249,9 +249,12 @@ class Release(db.Model, Timestamp):
     """Release tag."""
 
     errors = db.Column(
-        JSONType().with_variant(
-            postgresql.JSON(none_as_null=True),
-            'postgresql',
+        db.JSON().with_variant(
+            postgresql.JSON(none_as_null=True), 'postgresql',
+        ).with_variant(
+            JSONType(), 'sqlite'
+        ).with_variant(
+            JSONType(), 'mysql'
         ),
         nullable=True,
     )

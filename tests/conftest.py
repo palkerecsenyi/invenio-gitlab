@@ -41,6 +41,7 @@ from invenio_oauth2server import InvenioOAuth2Server
 from invenio_oauthclient import InvenioOAuthClient
 from invenio_oauthclient.views.client import blueprint as blueprint_client
 from invenio_oauthclient.views.settings import blueprint as settings_blueprint
+from invenio_records import InvenioRecords
 from invenio_userprofiles import InvenioUserProfiles
 from invenio_userprofiles.models import UserProfile
 from invenio_webhooks import InvenioWebhooks
@@ -108,6 +109,7 @@ def base_app(instance_path):
     app_.register_blueprint(settings_blueprint)
     InvenioOAuth2Server(app_)
     InvenioUserProfiles(app_)
+    InvenioRecords(app_)
 
     return app_
 

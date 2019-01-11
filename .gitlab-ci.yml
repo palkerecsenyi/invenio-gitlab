@@ -37,6 +37,7 @@ before_script:
   - requirements-builder -e $EXTRAS --level=dev --req requirements-devel.txt setup.py > .ci-devel-requirements.txt
   - pip install -r .ci-$REQUIREMENTS-requirements.txt
   - pip install -e .[$EXTRAS]
+  - pip install -e git+https://github.com/inveniosoftware/invenio-webhooks.git#egg=invenio-webhooks
 
 .base-job: &base-job
   retry: 1

@@ -120,6 +120,9 @@ setup(
         'invenio_celery.tasks': [
             'invenio_gitlab = invenio_gitlab.tasks',
         ],
+        'invenio_db.alembic': [
+            'invenio_gitlab = invenio_gitlab:alembic',
+        ],
         'invenio_db.models': [
             'invenio_gitlab = invenio_gitlab.models',
         ],
