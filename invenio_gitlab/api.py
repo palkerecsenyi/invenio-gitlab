@@ -298,6 +298,8 @@ class GitLabRelease(object):
     @cached_property
     def description(self):
         """Return project description."""
+        if not self.project['description']:
+            return 'No description available.'
         return self.project['description']
 
     @cached_property
