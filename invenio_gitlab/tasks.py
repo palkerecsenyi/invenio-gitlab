@@ -74,3 +74,26 @@ def process_release(tag, project_id, verify_sender=False):
             u'Error while processing {release}'.format(release=release.model))
     finally:
         db.session.commit()
+
+
+@shared_task(max_retries=6, default_retry_delay=10 * 60, rate_limit='100/m')
+def disconnect_gitlab(access_token, project_webhooks):
+    """Uninstall webhooks."""
+    import gitlab
+    try:
+        gl = gitlab.Gitlab(current_app.config['GITLAB_BASE_URL'],
+                           oauth_token=access_token)
+        for project_id, project_hook in project_webhooks:
+            project = gl.projects.get(project_id)
+            # Check, if hook is already installed.
+            hook = project.hooks.get(project_hook)
+            if hook and hook.delete():
+                info_msg = u'Deleted hook {hook} from {project}'.format(
+                    hook=hook.id, project=project.full_name)
+                current_app.logger.info(info_msg)
+        # FIXME: Oauth token revocation is currently not possible via
+        # GitLab's API. We can just drop the token from our DB, as already
+        # done before this task. Relevant issue on GitLab:
+        # https://gitlab.com/gitlab-org/gitlab-ce/issues/48503
+    except Exception as exc:
+        disconnect_gitlab.retry(exc=exc)

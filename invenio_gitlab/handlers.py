@@ -29,8 +29,11 @@ from invenio_oauth2server.models import Token as ProviderToken
 from invenio_oauthclient.models import RemoteToken
 from invenio_oauthclient.utils import oauth_link_external_id, \
     oauth_unlink_external_id
+from sqlalchemy.orm.exc import NoResultFound
 
 from .api import GitLabAPI
+from .models import Project
+from .tasks import disconnect_gitlab
 
 REMOTE_APP = dict(
     title='GitLab',
@@ -111,9 +114,26 @@ def disconnect_handler(remote):
         webhook_token_id = extra_data.get('tokens', {}).get('webhook')
         ProviderToken.query.filter_by(id=webhook_token_id).delete()
 
-        # TODO: disable GitLab webhooks here.
+        # Disable GitLab webhooks from Invenio side.
+        db_projects = Project.query.filter_by(user_id=user_id).all()
+        projects_with_hooks = [(p.gitlab_id, p.hook)
+                               for p in db_projects if p.hook]
+        for project in db_projects:
+            try:
+                Project.disable(
+                    user_id=user_id,
+                    gitlab_id=project.gitlab_id,
+                    name=project.name,
+                )
+            except NoResultFound:
+                # If no project exists, just skip it, no action required
+                pass
+        db.session.commit()
+
+        # Send the celery task for remote webhook removal
+        disconnect_gitlab.delay(token.access_token, projects_with_hooks)
 
         # Delete the RemoteAccount (along with the associated RemoteToken)
         token.remote_account.delete()
 
-        return redirect(url_for('invenio_oauthclient_settings.index'))
+    return redirect(url_for('invenio_oauthclient_settings.index'))
