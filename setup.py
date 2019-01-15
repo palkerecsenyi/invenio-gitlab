@@ -69,18 +69,21 @@ setup_requires = [
 install_requires = [
     'Flask>=0.11.1',
     'Flask-BabelEx>=0.9.2',
-    'Flask-OAuthlib>=0.9.5',
+    'Flask-OAuthlib>=0.9.3',
     'humanize>=0.5.1',
     'invenio-accounts>=1.0.0',
     'invenio-assets>=1.0.0',
     'invenio-celery>=1.0.0',
     'invenio-deposit>=1.0.0a9',
+    'invenio-formatter[badges]>=1.0.0',
     'invenio-oauthclient>=1.0.0',
     'invenio-oauth2server>=1.0.0',
     'invenio-pidstore>=1.0.0',
     'invenio-records>=1.0.0',
     'invenio-webhooks>=1.0.0a4',
+    'oauthlib>=1.1.2,!=2.0.0,!=2.0.3,!=2.0.4,!=2.0.5,<3.0.0',
     'python-gitlab>=1.7.0',
+    'requests-oauthlib>=0.5.0,<1.2.0',
 ]
 
 packages = find_packages()
@@ -152,10 +155,12 @@ setup(
         'Programming Language :: Python',
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
         'Topic :: Software Development :: Libraries :: Python Modules',
+        'Framework :: Flask',
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.5',
-        'Development Status :: 1 - Planning',
+        'Programming Language :: Python :: 3.6',
+        'Development Status :: 3 - Alpha',
     ],
 )
