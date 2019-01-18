@@ -25,6 +25,7 @@ import json
 import os
 import shutil
 import tempfile
+import uuid
 
 import pytest
 from flask import Flask
@@ -37,6 +38,7 @@ from invenio_accounts import InvenioAccounts
 from invenio_assets import InvenioAssets
 from invenio_db import InvenioDB
 from invenio_db import db as db_
+from invenio_formatter import InvenioFormatter
 from invenio_oauth2server import InvenioOAuth2Server
 from invenio_oauthclient import InvenioOAuthClient
 from invenio_oauthclient.views.client import blueprint as blueprint_client
@@ -45,11 +47,14 @@ from invenio_records import InvenioRecords
 from invenio_userprofiles import InvenioUserProfiles
 from invenio_userprofiles.models import UserProfile
 from invenio_webhooks import InvenioWebhooks
+from invenio_webhooks.models import Event
 from invenio_webhooks.views import blueprint as webhooks_blueprint
 from sqlalchemy_utils.functions import create_database, database_exists
 
 from invenio_gitlab import InvenioGitLab
 from invenio_gitlab.handlers import REMOTE_APP as GITLAB_REMOTE_APP
+from invenio_gitlab.models import Project, Release
+from invenio_gitlab.views.gitlab import blueprint as gitlab_blueprint
 
 
 @pytest.fixture()
@@ -82,6 +87,9 @@ def base_app(instance_path):
             consumer_key='gitlab_key_changeme',
             consumer_secret='gitlab_secret_changeme',
         ),
+        GITLAB_WEBHOOK_RECEIVER_URL='http://localhost'
+                                    '/hooks/receivers/gitlab/events/'
+                                    '?access_token={token}',
         SQLALCHEMY_TRACK_MODIFICATIONS=False,
         SQLALCHEMY_DATABASE_URI=os.getenv('SQLALCHEMY_DATABASE_URI',
                                           'sqlite://'),
@@ -110,6 +118,7 @@ def base_app(instance_path):
     InvenioOAuth2Server(app_)
     InvenioUserProfiles(app_)
     InvenioRecords(app_)
+    InvenioFormatter(app_)
 
     return app_
 
@@ -118,6 +127,7 @@ def base_app(instance_path):
 def app(base_app):
     """Flask application fixture."""
     InvenioGitLab(base_app)
+    base_app.register_blueprint(gitlab_blueprint)
     with base_app.app_context():
         yield base_app
 
@@ -186,3 +196,30 @@ def user(app, db):
         db.session.add(profile)
     db.session.commit()
     return user1
+
+
+@pytest.fixture()
+def project(app, db, user):
+    """Create sample project."""
+    project = Project.create(user.id, gitlab_id=1234,
+                             name='test/test', regex='v.*$')
+    project.enable(user.id, 1234, 'test/test', 1234)
+    db.session.commit()
+    return project
+
+
+@pytest.fixture()
+def release(app, db, project, user, hook_response):
+    """Create sample release."""
+    event = Event(
+        id=uuid.uuid4(),
+        receiver_id='gitlab',
+        user_id=user.id,
+        payload=hook_response,
+        payload_headers={},
+        response_headers={},
+    )
+    db.session.add(event)
+    db.session.commit()
+    release = Release.create(event)
+    return release

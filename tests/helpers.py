@@ -19,17 +19,32 @@
 
 """Helper functions for tests."""
 
+from invenio_oauthclient._compat import _create_identifier
+from invenio_oauthclient.views.client import serializer
+
 try:
-    from unittest.mock import MagicMock
+    from unittest import mock
 except ImportError:
-    from mock import MagicMock
+    import mock
+
+
+def login_user(client, user):
+    """Log in a specified user."""
+    with client.session_transaction() as sess:
+        sess['user_id'] = user.id if user else None
+        sess['_fresh'] = True
 
 
 def mock_response(oauth, remote_app='gitlab', data=None):
     """Mock the oauth response to use the remote."""
-    oauth.remote_apps[remote_app].handle_oauth2_response = MagicMock(
+    oauth.remote_apps[remote_app].handle_oauth2_response = mock.MagicMock(
         return_value=data
     )
+
+
+def _get_state():
+    return serializer.dumps({'app': 'gitlab', 'sid': _create_identifier(),
+                             'next': None, })
 
 
 class GLUser(object):
@@ -51,6 +66,26 @@ class GLUser(object):
         }
 
 
+class Hook(object):
+    """Hook object for mocking GitLab API."""
+
+    def __init__(self, id=123):
+        """Init."""
+        self.id = id
+
+
+class Hooks(object):
+    """Hooks class for mocking GitLab API."""
+
+    def list(self):
+        """Return list of installed hooks."""
+        return []
+
+    def create(self, attributes):
+        """Create GitLab webhook."""
+        return Hook()
+
+
 class GLProjects(object):
     """Class for mocking a GitLab project."""
 
@@ -59,6 +94,7 @@ class GLProjects(object):
         self.id = id
         self.name = name
         self.path_with_namespace = path_with_namespace
+        self.hooks = Hooks()
 
     @property
     def attributes(self):
@@ -78,6 +114,10 @@ class ProjectList(object):
     def list(self, owned=False, simple=False):
         """List GitLab projects."""
         return [GLProjects()]
+
+    def get(self, project_id):
+        """Return project."""
+        return self.list()[0]
 
 
 class GitlabMock(object):

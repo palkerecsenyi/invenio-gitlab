@@ -160,12 +160,13 @@ def project(name):
                 if project_instance.id else []
             )
         ]
-    return render_template(
-        current_app.config['GITLAB_TEMPLATE_VIEW'],
-        project=project_instance,
-        releases=releases,
-        serializer=current_gitlab.record_serializer,
-    )
+        return render_template(
+            current_app.config['GITLAB_TEMPLATE_VIEW'],
+            project=project_instance,
+            releases=releases,
+            serializer=current_gitlab.record_serializer,
+        )
+    abort(403)
 
 
 @blueprint.route('/hook', methods=['POST', 'DELETE'])

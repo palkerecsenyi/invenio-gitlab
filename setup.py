@@ -28,13 +28,13 @@ history = open('CHANGES.rst').read()
 
 tests_require = [
     'check-manifest>=0.25',
-    'coverage>=4.0',
+    'coverage>=4.3.1',
     'invenio-userprofiles>=1.0.0',
     'isort>=4.3.3',
     'mock>=1.3.0',
     'pydocstyle>=1.0.0',
     'pytest-cache>=1.0',
-    'pytest-cov>=1.8.0',
+    'pytest-cov>=2.0.0',
     'pytest-pep8>=1.0.6',
     'pytest>=3.7.0',
 ]

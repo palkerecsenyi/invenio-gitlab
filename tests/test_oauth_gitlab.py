@@ -22,22 +22,10 @@
 import pytest
 from flask import session, url_for
 from flask_login import current_user
-from helpers import GitlabMock, mock_response
+from helpers import GitlabMock, _get_state, mock, mock_response
 from invenio_accounts.models import User
-from invenio_oauthclient._compat import _create_identifier
 from invenio_oauthclient.models import RemoteAccount, RemoteToken, UserIdentity
-from invenio_oauthclient.views.client import serializer
 from six.moves.urllib_parse import parse_qs, urlparse
-
-try:
-    from unittest import mock
-except ImportError:
-    import mock
-
-
-def _get_state():
-    return serializer.dumps({'app': 'gitlab', 'sid': _create_identifier(),
-                             'next': None, })
 
 
 def test_login(client):

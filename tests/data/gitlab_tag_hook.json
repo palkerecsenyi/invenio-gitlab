@@ -7,9 +7,9 @@
     "user_id": 1,
     "user_name": "John Smith",
     "user_avatar": "https://s.gravatar.com/avatar/d4c74594d841139328695756648b6bd6?s=8://s.gravatar.com/avatar/d4c74594d841139328695756648b6bd6?s=80",
-    "project_id": 1,
+    "project_id": 1234,
     "project": {
-        "id": 1,
+        "id": 1234,
         "name": "Example",
         "description": "",
         "web_url": "http://example.com/jsmith/example",

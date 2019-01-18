@@ -204,9 +204,6 @@ class GitLabAPI(object):
                     h.delete()
                 # Recreate the webhook.
                 hook = gl_project.hooks.create(attributes)
-            except gitlab.GitlabError:
-                current_app.logger.error('Could not create webhook.')
-            finally:
                 if hook:
                     Project.enable(
                         user_id=self.user_id,
@@ -215,6 +212,9 @@ class GitLabAPI(object):
                         hook=hook.id,
                     )
                     return True
+            except gitlab.GitlabError:
+                current_app.logger.error('Could not create webhook.')
+                return False
         return False
 
     def remove_hook(self, project_id, name):

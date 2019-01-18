@@ -32,16 +32,16 @@ def test_project(app, db, tester_id):
     project = Project.create(
         user_id=tester_id,
         gitlab_id=1234,
-        name="tester/testproject",
+        name='tester/testproject',
     )
     db.session.add(project)
     db.session.commit()
 
     # get the project by id
     project = Project.get(user_id=tester_id, gitlab_id=1234)
-    assert project.name == "tester/testproject"
+    assert project.name == 'tester/testproject'
 
-    assert str(project) == "<Project tester/testproject:1234>"
+    assert str(project) == '<Project tester/testproject:1234>'
 
     with pytest.raises(ProjectAccessError):
         project = Project.get(user_id=tester_id+1, gitlab_id=1234)
@@ -51,7 +51,7 @@ def test_project(app, db, tester_id):
     project = Project.create(
         user_id=tester_id,
         gitlab_id=2456,
-        name="tester/testproject12",
+        name='tester/testproject12',
         regex=regex,
     )
     db.session.add(project)
@@ -68,6 +68,36 @@ def test_project(app, db, tester_id):
         project = Project.create(
             user_id=tester_id,
             gitlab_id=2456,
-            name="tester/testproject12",
+            name='tester/testproject12',
             regex=regex,
         )
+
+    # Test project enabling
+    project = Project.enable(
+        user_id=tester_id,
+        gitlab_id=2456,
+        name='tester/testproject12',
+        hook=12345,
+    )
+    db.session.commit()
+
+    # get the project by id
+    project = Project.get(user_id=tester_id, gitlab_id=2456)
+    assert project.enabled
+    assert project.hook == 12345
+
+    # Disable project
+    project = Project.disable(
+        user_id=tester_id,
+        gitlab_id=2456,
+        name='tester/testproject12',
+    )
+    db.session.commit()
+
+    # get the project by id
+    project = Project.get(user_id=tester_id, gitlab_id=2456)
+    assert not project.enabled
+    assert not project.hook
+
+    # Test project with no releases
+    assert not project.latest_release()
