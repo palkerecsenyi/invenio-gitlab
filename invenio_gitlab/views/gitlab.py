@@ -22,6 +22,7 @@
 from __future__ import absolute_import
 
 import json
+import re
 from datetime import datetime
 
 import humanize
@@ -203,3 +204,37 @@ def hook():
             abort(403)
     else:
         abort(400)
+
+
+@blueprint.route('/releaseregex', methods=['POST', 'DELETE'])
+@login_required
+def releaseregex():
+    """Change the regex used for release detection."""
+    project_id = request.json.get('id', None)
+    if not project_id:
+        abort(400, _('Specify the project ID.'))
+
+    try:
+        project_instance = Project.get(user_id=current_user.id,
+                                       gitlab_id=project_id,
+                                       check_owner=True)
+    except NoResultFound:
+        abort(403)
+
+    if request.method == 'POST':
+        regex = request.json.get('regex', None)
+        if not regex:
+            abort(400, _('Specify a valid regular '
+                         'expression for your releases.'))
+        try:
+            re.compile(regex)
+        except re.error:
+            abort(400, _('Regular expression is invalid.'))
+        project_instance.release_regex = regex
+        db.session.commit()
+        return '', 204
+    elif request.method == 'DELETE':
+        # Reset regex to the default value.
+        project_instance.release_regex = 'v.*$'
+        db.session.commit()
+        return '', 204
