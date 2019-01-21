@@ -39,11 +39,23 @@ before_script:
   - pip install -e .[$EXTRAS]
   - pip install -e git+https://github.com/inveniosoftware/invenio-webhooks.git#egg=invenio-webhooks
 
+stages:
+  - test
+  - coverage
+
 .base-job: &base-job
   retry: 1
   stage: test
   script:
     - ./run-tests.sh
+  after_script:
+    - mv .coverage .coverage.${CI_JOB_ID}
+  artifacts:
+    paths:
+      - ${CI_PROJECT_DIR}/.coverage.${CI_JOB_ID}
+    when: on_success
+    expire_in: 1 day
+
 
 .cache-sqlite: &cache-sqlite
   cache:
@@ -166,3 +178,16 @@ py2.7-pypi-postgres:
   variables:
     <<: *postgresql
     <<: *pypi
+
+global-coverage:
+  image: python:3.6-alpine
+  stage: coverage
+  before_script:
+    - echo "Skip before_script section."
+  script:
+    - pip install coverage
+    - coverage combine
+    - coverage report -m
+  after_script:
+    - echo "Skip after_script section."
+  coverage: '/^TOTAL\s+\d+\s+\d+\s+(\d+\%)$/'
