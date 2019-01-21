@@ -209,8 +209,8 @@ def project(app, db, user):
 
 
 @pytest.fixture()
-def release(app, db, project, user, hook_response):
-    """Create sample release."""
+def event(app, db, user, hook_response):
+    """Create a sample event."""
     event = Event(
         id=uuid.uuid4(),
         receiver_id='gitlab',
@@ -221,5 +221,12 @@ def release(app, db, project, user, hook_response):
     )
     db.session.add(event)
     db.session.commit()
+    return event
+
+
+@pytest.fixture()
+def release(app, db, project, user, event):
+    """Create sample release."""
     release = Release.create(event)
+    db.session.commit()
     return release

@@ -20,11 +20,14 @@
 """Test DB models."""
 
 import re
+import uuid
 
 import pytest
+from invenio_webhooks.models import Event
 
-from invenio_gitlab.errors import InvalidRegexError, ProjectAccessError
-from invenio_gitlab.models import Project
+from invenio_gitlab.errors import InvalidRegexError, ProjectAccessError, \
+    ProjectDisabledError, ReleaseAlreadyReceivedError
+from invenio_gitlab.models import Project, Release
 
 
 def test_project(app, db, tester_id):
@@ -101,3 +104,40 @@ def test_project(app, db, tester_id):
 
     # Test project with no releases
     assert not project.latest_release()
+
+
+def test_release(app, db, project, user, event, hook_response):
+    """Test the release model."""
+    release = Release.create(event)
+    db.session.commit()
+    assert release.project_id == project.id
+    assert release.tag == 'v1.0.0'
+
+    # Test double receive receipt
+    with pytest.raises(ReleaseAlreadyReceivedError):
+        release = Release.create(event)
+
+    # delete release
+    db.session.delete(release)
+
+    # Release creation on disabled project
+    with pytest.raises(ProjectDisabledError):
+        project.disable(user.id, 1234, 'test/test')
+        db.session.commit()
+        release = Release.create(event)
+
+    # Test with event not fitting regex
+    hook_response['ref'] = 'refs/tags/test'
+    event = Event(
+        id=uuid.uuid4(),
+        receiver_id='gitlab',
+        user_id=user.id,
+        payload=hook_response,
+        payload_headers={},
+        response_headers={},
+    )
+    db.session.add(event)
+    db.session.commit()
+
+    release = Release.create(event)
+    assert not release
