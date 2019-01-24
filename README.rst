@@ -36,7 +36,7 @@ Module for Invenio that adds GitLab integration.
 
 *This is an experimental developer preview release.*
 
-TODO: Please provide feature overview of module
+- OAuthClient configuration for Single-Sign-On via GitLab
+- Automatic preservation of releases from one GitLab instance at a time
 
-Further documentation is available on
-https://data-management.pages.hzdr.de/invenio-gitlab
+Further documentation is available on TODO.

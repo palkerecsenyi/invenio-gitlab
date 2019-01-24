@@ -23,3 +23,63 @@ API Docs
 .. automodule:: invenio_gitlab.ext
    :members:
 
+Database Models
+---------------
+
+.. automodule:: invenio_gitlab.models
+   :members:
+
+Views
+-----
+
+Settings views
+^^^^^^^^^^^^^^
+
+.. automodule:: invenio_gitlab.views.gitlab
+   :members:
+
+Badge views
+^^^^^^^^^^^
+
+.. automodule:: invenio_gitlab.views.badge
+   :members:
+
+Celery Tasks
+------------
+
+.. automodule:: invenio_gitlab.tasks
+   :members:
+
+.. autotask:: invenio_gitlab.tasks.process_release
+
+.. autotask:: invenio_gitlab.tasks.disconnect_gitlab
+
+Errors
+------
+
+.. automodule:: invenio_gitlab.errors
+   :members:
+
+Handlers
+--------
+
+.. automodule:: invenio_gitlab.handlers
+   :members:
+
+Receivers
+---------
+
+.. automodule:: invenio_gitlab.receivers
+   :members:
+
+Utils
+-----
+
+.. automodule:: invenio_gitlab.utils
+   :members:
+
+Bundles
+-------
+
+.. automodule:: invenio_gitlab.bundles
+   :members:

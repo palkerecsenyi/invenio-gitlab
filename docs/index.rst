@@ -29,8 +29,8 @@ Invenio-GitLab.
    :maxdepth: 2
 
    installation
-   configuration
    usage
+   configuration
    examplesapp
 
 

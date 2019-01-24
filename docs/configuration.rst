@@ -16,9 +16,10 @@
     You should have received a copy of the GNU General Public License
     along with Rodare. If not, see <http://www.gnu.org/licenses/>.
 
+.. _configuration-label:
 
-Configuration
-=============
+Configuration Parameters
+========================
 
 .. automodule:: invenio_gitlab.config
    :members:

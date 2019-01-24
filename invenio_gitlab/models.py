@@ -155,7 +155,15 @@ class Project(db.Model, Timestamp):
 
     @classmethod
     def create(cls, user_id, gitlab_id=None, name=None, regex=None, **kwargs):
-        """Create the project."""
+        """Create the project.
+
+        :param int user_id: User identifier.
+        :param int gitlab_id: GitLab project identifier.
+        :param str name: GitLab project full name.
+        :param str regex: Regular expression used to identify version tags.
+        :raises: :py:exc:`~.errors.InvalidRegexError`: if the regex cannot be
+                 compiled successfully.
+        """
         with db.session.begin_nested():
             obj = cls(user_id=user_id, gitlab_id=gitlab_id, name=name,
                       **kwargs)
@@ -173,16 +181,16 @@ class Project(db.Model, Timestamp):
     def get(cls, user_id, gitlab_id=None, name=None, check_owner=True):
         """Return a project.
 
-        :param integer user_id: User identifier.
-        :param integer gitlab_id: GitLab project identifier.
+        :param int user_id: User identifier.
+        :param int gitlab_id: GitLab project identifier.
         :param str name: GitLab project full name.
         :raises: :py:exc:`~sqlalchemy.orm.exc.NoResultFound`: if the project
                  doesn't exist.
         :raises: :py:exc:`~sqlalchemy.orm.exc.MultipleResultsFound`: if
                  multiple projects with the specified GitLab id and/or name
                  exist.
-        :raises: :py:exc:`ProjectAccessError`: if the user is not the owner
-                 of the project.
+        :raises: :py:exc:`~.errors.ProjectAccessError`: if the user is not the
+                 owner of the project.
         """
         project = cls.query.filter((Project.gitlab_id == gitlab_id) |
                                    (Project.name == name)).one()
@@ -216,7 +224,7 @@ class Project(db.Model, Timestamp):
 
     @property
     def enabled(self):
-        """Return, if webhooks are enabled for the project."""
+        """Return True, if webhooks are enabled for the project."""
         return bool(self.hook)
 
     def latest_release(self, status=None):

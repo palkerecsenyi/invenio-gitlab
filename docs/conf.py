@@ -24,6 +24,7 @@ from __future__ import print_function
 import os
 
 import sphinx.environment
+import sphinx_rtd_theme
 
 # -- General configuration ------------------------------------------------
 
@@ -37,6 +38,7 @@ suppress_warnings = ['image.nonlocal_uri']
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    'celery.contrib.sphinx',
     'sphinx.ext.autodoc',
     'sphinx.ext.coverage',
     'sphinx.ext.doctest',
@@ -126,15 +128,7 @@ todo_include_todos = False
 
 
 # -- Options for HTML output ----------------------------------------------
-html_theme = 'alabaster'
-
-html_theme_options = {
-    'description': 'Module for Invenio that adds GitLab integration.',
-    'show_powered_by': False,
-    'extra_nav_links': {
-        'invenio-gitlab@GitLab': 'https://gitlab.hzdr.de/rodare/invenio-gitlab',
-    }
-}
+html_theme = 'sphinx_rtd_theme'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
@@ -145,7 +139,7 @@ html_theme_options = {
 #html_theme_options = {}
 
 # Add any paths that contain custom themes here, relative to this directory.
-#html_theme_path = []
+html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
@@ -324,8 +318,7 @@ texinfo_documents = [
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {
     'python': ('https://docs.python.org/', None),
-    # TODO: Configure external documentation references, eg:
-    # 'Flask-Admin': ('https://flask-admin.readthedocs.io/en/latest/', None),
+    'SQLAlchemy': ('https://docs.sqlalchemy.org/en/latest/', None),
 }
 
 # Autodoc configuraton.
