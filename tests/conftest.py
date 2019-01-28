@@ -202,7 +202,7 @@ def user(app, db):
 def project(app, db, user):
     """Create sample project."""
     project = Project.create(user.id, gitlab_id=1234,
-                             name='test/test', regex='v.*$')
+                             name='test/test', pattern='v*')
     project.enable(user.id, 1234, 'test/test', 1234)
     db.session.commit()
     return project

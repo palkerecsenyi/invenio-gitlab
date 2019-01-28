@@ -21,7 +21,7 @@
 
 from __future__ import absolute_import
 
-import re
+import fnmatch
 import uuid
 from enum import Enum
 
@@ -37,7 +37,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy_utils.models import Timestamp
 from sqlalchemy_utils.types import ChoiceType, JSONType, UUIDType
 
-from .errors import InvalidRegexError, ProjectAccessError, \
+from .errors import NoVersionTagError, ProjectAccessError, \
     ProjectDisabledError, ReleaseAlreadyReceivedError
 
 RELEASE_STATUS_TITLES = {
@@ -144,36 +144,30 @@ class Project(db.Model, Timestamp):
     hook = db.Column(db.Integer)
     """Hook identifier."""
 
-    release_regex = db.Column(
+    release_pattern = db.Column(
         db.String(255),
-        default='v.*$',
+        default='v*',
     )
-    """Regex to compare release tags with."""
+    """Pattern to compare release tags with."""
 
     # Relationships
     user = db.relationship(User)
 
     @classmethod
-    def create(cls, user_id, gitlab_id=None, name=None, regex=None, **kwargs):
+    def create(cls, user_id, gitlab_id=None,
+               name=None, pattern=None, **kwargs):
         """Create the project.
 
         :param int user_id: User identifier.
         :param int gitlab_id: GitLab project identifier.
         :param str name: GitLab project full name.
-        :param str regex: Regular expression used to identify version tags.
-        :raises: :py:exc:`~.errors.InvalidRegexError`: if the regex cannot be
-                 compiled successfully.
+        :param str pattern: Glob pattern used to identify version tags.
         """
         with db.session.begin_nested():
             obj = cls(user_id=user_id, gitlab_id=gitlab_id, name=name,
                       **kwargs)
-            if regex:
-                try:
-                    re.compile(regex)
-                except re.error:
-                    raise InvalidRegexError(
-                        'Regular expression cannot be compiled.')
-                obj.release_regex = regex
+            if pattern:
+                obj.release_pattern = pattern
             db.session.add(obj)
         return obj
 
@@ -305,9 +299,11 @@ class Release(db.Model, Timestamp):
         # Check, if the tag matches the regular expression.
         project_id = event.payload['project_id']
         project = Project.get(user_id=event.user_id, gitlab_id=project_id)
-        rex = re.compile(project.release_regex)
-        if not rex.match(tag):
-            return
+        if not fnmatch.fnmatchcase(tag, project.release_pattern):
+            raise NoVersionTagError(
+                u'{tag} is not a new version tag according to the configured '
+                'pattern.'.format(tag=tag)
+            )
         # Check, if the release has already been processed.
         existing_release = Release.query.filter_by(
             tag=tag, project_id=project.id).first()

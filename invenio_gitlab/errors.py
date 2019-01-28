@@ -40,9 +40,9 @@ class ReleaseAlreadyReceivedError(GitLabError):
     """Release already processed."""
 
 
-class InvalidRegexError(GitLabError):
-    """Invalid regular expression error."""
-
-
 class CustomGitLabMetadataError(GitLabError):
     """GitLab metadata file is not valid JSON."""
+
+
+class NoVersionTagError(GitLabError):
+    """The version tag does not match the configured pattern."""

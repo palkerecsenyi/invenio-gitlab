@@ -44,7 +44,7 @@ def upgrade():
         sa.Column('user_id', sa.Integer(), nullable=True),
         sa.Column('ping', sa.DateTime(), nullable=True),
         sa.Column('hook', sa.Integer()),
-        sa.Column('release_regex', sa.String(length=255), default='v.*'),
+        sa.Column('release_pattern', sa.String(length=255), default='v*'),
         # Inherited columns from sqlalchemy_utils.models:Timestamp
         sa.Column('created', sa.DateTime(), default=datetime.utcnow,
                   nullable=False),

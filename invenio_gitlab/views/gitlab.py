@@ -21,8 +21,8 @@
 
 from __future__ import absolute_import
 
+import fnmatch
 import json
-import re
 from datetime import datetime
 
 import humanize
@@ -206,10 +206,10 @@ def hook():
         abort(400)
 
 
-@blueprint.route('/releaseregex', methods=['POST', 'DELETE'])
+@blueprint.route('/pattern', methods=['POST', 'DELETE'])
 @login_required
-def releaseregex():
-    """Change the regex used for release detection."""
+def pattern():
+    """Change the pattern used for release detection."""
     project_id = request.json.get('id', None)
     if not project_id:
         abort(400, _('Specify the project ID.'))
@@ -222,19 +222,16 @@ def releaseregex():
         abort(403)
 
     if request.method == 'POST':
-        regex = request.json.get('regex', None)
-        if not regex:
-            abort(400, _('Specify a valid regular '
-                         'expression for your releases.'))
-        try:
-            re.compile(regex)
-        except re.error:
-            abort(400, _('Regular expression is invalid.'))
-        project_instance.release_regex = regex
+        pattern = request.json.get('pattern', None)
+        if not pattern:
+            abort(400, _('Specify a valid glob pattern '
+                         'for your releases.'))
+
+        project_instance.release_pattern = pattern
         db.session.commit()
         return '', 204
     elif request.method == 'DELETE':
-        # Reset regex to the default value.
-        project_instance.release_regex = 'v.*$'
+        # Reset pattern to the default value.
+        project_instance.release_pattern = 'v*'
         db.session.commit()
         return '', 204

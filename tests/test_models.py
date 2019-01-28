@@ -19,13 +19,13 @@
 
 """Test DB models."""
 
-import re
+import fnmatch
 import uuid
 
 import pytest
 from invenio_webhooks.models import Event
 
-from invenio_gitlab.errors import InvalidRegexError, ProjectAccessError, \
+from invenio_gitlab.errors import NoVersionTagError, ProjectAccessError, \
     ProjectDisabledError, ReleaseAlreadyReceivedError
 from invenio_gitlab.models import Project, Release
 
@@ -49,31 +49,20 @@ def test_project(app, db, tester_id):
     with pytest.raises(ProjectAccessError):
         project = Project.get(user_id=tester_id+1, gitlab_id=1234)
 
-    # Test creation with custom regex.
-    regex = r'^v\d*\.\d*$'
+    # Test creation with custom pattern.
+    pattern = 'v[0-9].[0-9].[0-9]'
     project = Project.create(
         user_id=tester_id,
         gitlab_id=2456,
         name='tester/testproject12',
-        regex=regex,
+        pattern=pattern,
     )
     db.session.add(project)
     db.session.commit()
 
     # get the project by id
     project = Project.get(user_id=tester_id, gitlab_id=2456)
-    assert project.release_regex == regex
-    re.compile(project.release_regex)
-
-    # Test invalid regex.
-    regex = r'[\d*'
-    with pytest.raises(InvalidRegexError):
-        project = Project.create(
-            user_id=tester_id,
-            gitlab_id=2456,
-            name='tester/testproject12',
-            regex=regex,
-        )
+    assert project.release_pattern == pattern
 
     # Test project enabling
     project = Project.enable(
@@ -126,7 +115,7 @@ def test_release(app, db, project, user, event, hook_response):
         db.session.commit()
         release = Release.create(event)
 
-    # Test with event not fitting regex
+    # Test with event not fitting pattern
     hook_response['ref'] = 'refs/tags/test'
     event = Event(
         id=uuid.uuid4(),
@@ -139,5 +128,5 @@ def test_release(app, db, project, user, event, hook_response):
     db.session.add(event)
     db.session.commit()
 
-    release = Release.create(event)
-    assert not release
+    with pytest.raises(NoVersionTagError):
+        release = Release.create(event)

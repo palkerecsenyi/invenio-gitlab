@@ -101,9 +101,9 @@ def test_settings_project(app, client, db, user, project):
     assert '/login' in resp.location
 
 
-def test_regex_configuration(app, client, db, user, project):
+def test_pattern_configuration(app, client, db, user, project):
     """Test changing of the release regular expression."""
-    url = url_for('invenio_gitlab.releaseregex')
+    url = url_for('invenio_gitlab.pattern')
     resp = client.post(url)
     # expect redirect to login form
     assert resp.status_code == 302
@@ -120,28 +120,23 @@ def test_regex_configuration(app, client, db, user, project):
     resp = client.post(url, data=json.dumps(data), headers=headers)
     assert resp.status_code == 403
 
-    # Test with project ID, without regex.
+    # Test with project ID, without pattern.
     data['id'] = 1234
     resp = client.post(url, data=json.dumps(data), headers=headers)
     assert resp.status_code == 400
 
-    # Test with invalid regex
-    data['regex'] = '['
-    resp = client.post(url, data=json.dumps(data), headers=headers)
-    assert resp.status_code == 400
-
-    # Test with valid regex
-    data['regex'] = 'v1.*$'
+    # Test with valid pattern
+    data['pattern'] = 'v1*'
     resp = client.post(url, data=json.dumps(data), headers=headers)
     assert resp.status_code == 204
     project_instance = Project.get(user_id=user.id,
                                    gitlab_id=1234)
-    assert project_instance.release_regex == data['regex']
+    assert project_instance.release_pattern == data['pattern']
 
-    # Reset regex to the default value
-    data.pop('regex')
+    # Reset pattern to the default value
+    data.pop('pattern')
     resp = client.delete(url, data=json.dumps(data), headers=headers)
     assert resp.status_code == 204
     project_instance = Project.get(user_id=user.id,
                                    gitlab_id=1234)
-    assert project_instance.release_regex == 'v.*$'
+    assert project_instance.release_pattern == 'v*'
