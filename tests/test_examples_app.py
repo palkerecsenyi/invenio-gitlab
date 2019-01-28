@@ -59,3 +59,15 @@ def example_app():
 
     # Return to the original directory
     os.chdir(current_dir)
+
+
+def test_index(example_app):
+    """Test example app creation."""
+    cmd = 'curl -I http://localhost:5000'
+    output = subprocess.check_output(cmd, shell=True).decode('utf-8')
+    assert '200' in output
+
+    cmd = 'curl -I http://localhost:5000/oauth/login/gitlab'
+    output = subprocess.check_output(cmd, shell=True).decode('utf-8')
+    assert '301' in output
+    assert 'location: https://github.com/login/oauth/authorize'

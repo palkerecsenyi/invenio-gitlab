@@ -30,6 +30,7 @@ tests_require = [
     'check-manifest>=0.25',
     'coverage>=4.3.1',
     'invenio-userprofiles>=1.0.0',
+    'invenio-search-ui>=1.0.0',
     'isort>=4.3.3',
     'mock>=1.3.0',
     'pydocstyle>=1.0.0',
@@ -45,13 +46,13 @@ extras_require = {
         'sphinx_rtd_theme>=0.2.4',
     ],
     'mysql': [
-        'invenio-db[mysql,versioning]>=1.0.0',
+        'invenio-db[mysql,versioning]>=1.0.2',
     ],
     'postgresql': [
-        'invenio-db[postgresql,versioning]>=1.0.0',
+        'invenio-db[postgresql,versioning]>=1.0.2',
     ],
     'sqlite': [
-        'invenio-db[versioning]>=1.0.0',
+        'invenio-db[versioning]>=1.0.2',
     ],
     'tests': tests_require,
 }
@@ -81,6 +82,7 @@ install_requires = [
     'invenio-oauth2server>=1.0.0',
     'invenio-pidstore>=1.0.0',
     'invenio-records>=1.0.0',
+    'invenio-theme>=1.0.0',
     'invenio-webhooks>=1.0.0a4',
     'oauthlib>=1.1.2,!=2.0.0,!=2.0.3,!=2.0.4,!=2.0.5,<3.0.0',
     'python-gitlab>=1.7.0',
