@@ -69,5 +69,5 @@ def test_index(example_app):
 
     cmd = 'curl -I http://localhost:5000/oauth/login/gitlab'
     output = subprocess.check_output(cmd, shell=True).decode('utf-8')
-    assert '301' in output
+    assert '308' in output
     assert 'location: https://github.com/login/oauth/authorize'
