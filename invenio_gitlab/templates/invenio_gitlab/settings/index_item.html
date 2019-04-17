@@ -10,11 +10,6 @@
         </a>
         <a href="{{ url_for('.project', name=project.full_name) }}">{{ project.full_name }}</a>
       </h4>
-      {%- if release.pid %}
-      <p>
-        {{ doi_badge(release.pid.pid_value, gitlab_id=project_id) }}
-      </p>
-      {%- endif %}
     </div>
     <div class="col-md-3">
       <span class="pull-right switch">
@@ -22,6 +17,35 @@
       </span>
     </div>
   </div>
+    <p>
+    {%- if release.pid %}
+      {{ doi_badge(release.pid.pid_value, gitlab_id=project_id) }}
+    {%- endif %}
+  </p>
+  {% if project.instance %}
+  <p>
+    <a class="panel-toggle collapsed" data-toggle="collapse" href="#pattern">
+      Release pattern&nbsp;
+      <span class="hide-on-collapsed-inline"><i class="fa fa-chevron-down"></i></span>
+      <span class="show-on-collapsed-inline"><i class="fa fa-chevron-right"></i></span>
+    </a>
+  </p>
+  <div class="row">
+    <div class="collapse" id="pattern">
+      <div class="col-md-12">
+        <div class="input-group">
+          <span class="input-group-btn">
+            <button class="btn btn-default" type="button" title="Reset"><i class="fa fa-trash" aria-hidden="true"></i></button>
+          </span>
+          <input type="text" class="form-control" value="{{ project.instance.release_pattern }}">
+          <span class="input-group-btn">
+            <button class="btn btn-default" type="button">Save</button>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
 </div>
 {%- if not loop.last %}
 <hr />

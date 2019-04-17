@@ -96,3 +96,18 @@ $gitlab-published-color-text: darken($gitlab-published-color, 17%);
         @include status-styling($gitlab-deleted-color-text);
     }
 }
+
+.hide-on-collapsed-inline {
+    display: inline;
+}
+.show-on-collapsed-inline {
+    display: none;
+}
+.panel-toggle.collapsed {
+    .hide-on-collapsed-inline {
+        display: none;
+    }
+    .show-on-collapsed-inline {
+        display: inline;
+    }
+}
