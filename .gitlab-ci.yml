@@ -28,8 +28,8 @@ variables:
   POSTGRES_DB: test
 
 before_script:
-  - curl -sL https://deb.nodesource.com/setup_6.x | bash -
-  - apt-get -qy install --fix-missing --no-install-recommends nodejs
+  - curl -sL https://deb.nodesource.com/setup_10.x | bash -
+  - apt-get -qy install --fix-missing nodejs
   - pip install --upgrade pip setuptools py
   - pip install twine wheel coveralls requirements-builder
   - requirements-builder -e $EXTRAS --level=min setup.py > .ci-min-requirements.txt
