@@ -21,7 +21,11 @@
 
 from __future__ import absolute_import, print_function
 
-from flask import current_app
+from flask import current_app, request
+from flask_menu import current_menu
+from invenio_i18n import LazyString
+from invenio_i18n import gettext as _
+from invenio_theme.proxies import current_theme_icons
 from six import string_types
 from werkzeug.utils import cached_property, import_string
 
@@ -40,7 +44,7 @@ class InvenioGitLab(object):
     @cached_property
     def release_api_class(self):
         """Gitlab release API class."""
-        cls = current_app.config['GITLAB_RELEASE_CLASS']
+        cls = current_app.config["GITLAB_RELEASE_CLASS"]
         if isinstance(cls, string_types):
             cls = import_string(cls)
         assert issubclass(cls, GitLabRelease)
@@ -49,7 +53,7 @@ class InvenioGitLab(object):
     @cached_property
     def record_serializer(self):
         """Gitlab record serializer property."""
-        imp = current_app.config['GITLAB_RECORD_SERIALIZER']
+        imp = current_app.config["GITLAB_RECORD_SERIALIZER"]
         if isinstance(imp, string_types):
             return import_string(imp)
         return imp
@@ -57,18 +61,39 @@ class InvenioGitLab(object):
     def init_app(self, app):
         """Flask application initialization."""
         self.init_config(app)
-        app.extensions['invenio-gitlab'] = self
+        app.extensions["invenio-gitlab"] = self
 
     def init_config(self, app):
         """Initialize configuration."""
         app.config.setdefault(
-            'GITLAB_BASE_TEMPLATE',
-            app.config.get('BASE_TEMPLATE',
-                           'invenio_gitlab/base.html'))
+            "GITLAB_BASE_TEMPLATE",
+            app.config.get("BASE_TEMPLATE", "invenio_gitlab/base.html"),
+        )
         app.config.setdefault(
-            'GITLAB_SETTINGS_TEMPLATE',
-            app.config.get('SETTINGS_TEMPLATE',
-                           'invenio_gitlab/settings/base.html'))
+            "GITLAB_SETTINGS_TEMPLATE",
+            app.config.get("SETTINGS_TEMPLATE", "invenio_gitlab/settings/base.html"),
+        )
         for k in dir(config):
-            if k.startswith('GITLAB_'):
+            if k.startswith("GITLAB_"):
                 app.config.setdefault(k, getattr(config, k))
+
+
+def finalize_app(app):
+    """Finalize app."""
+    init_menu(app)
+
+
+def init_menu(app):
+    """Init menu."""
+    if app.config.get("GITLAB_INTEGRATION_ENABLED", False):
+        current_menu.submenu("settings.gitlab").register(
+            endpoint="invenio_gitlab.index",
+            text=_(
+                "%(icon)s GitLab",
+                icon=LazyString(
+                    lambda: f'<i class="{current_theme_icons.gitlab}"></i>'
+                ),
+            ),
+            order=10,
+            active_when=lambda: request.endpoint.startswith("invenio_gitlab."),
+        )

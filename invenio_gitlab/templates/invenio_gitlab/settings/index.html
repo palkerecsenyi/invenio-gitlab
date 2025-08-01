@@ -1,29 +1,31 @@
+{# -*- coding: utf-8 -*-
+
+  This file is part of Invenio.
+  Copyright (C) 2023 CERN.
+
+  Invenio is free software; you can redistribute it and/or modify it
+  under the terms of the MIT License; see LICENSE file for more details.
+#}
+
 {%- import "invenio_gitlab/settings/helpers.html" as helpers with context %}
 
 {%- if not request.is_xhr %}
-{%- extends config.GITLAB_SETTINGS_TEMPLATE %}
+  {%- extends config.GITLAB_SETTINGS_TEMPLATE %}
 
-{%- block css %}
-{{ super() }}
-{% assets "invenio_gitlab_css" %}<link href="{{ ASSET_URL }}" rel="stylesheet">{% endassets %}
-{%- endblock css %}
-
-{%- block javascript %}
-{{ super() }}
-{% assets "invenio_gitlab_js" %}<script src="{{ ASSET_URL }}"></script>{% endassets %}
-<script type="text/javascript">
-require(['jquery', 'js/gitlab/view'], function($, view) {
-  $(document).ready(function(){
-    view({
-      hook_url: "{{url_for('invenio_gitlab.hook')}}",
-      sync_url: "{{url_for('invenio_gitlab.index')}}",
-      sync_button: "button[name='sync-repos']",
-      gitlab_view: ".gitlab-panels"
+  {%- block javascript %}
+    {{ super() }}
+    <script type="text/javascript">
+    require(['jquery', 'js/gitlab/view'], function($, view) {
+      $(document).ready(function(){
+        view({
+          sync_url: "{{url_for('invenio_gitlab.index')}}",
+          sync_button: "button[name='sync-repos']",
+          gitlab_view: ".gitlab-panels"
+        });
+      });
     });
-  });
-});
-</script>
-{%- endblock %}
+    </script>
+  {%- endblock %}
 {%- endif %}
 
 {%- block settings_content %}

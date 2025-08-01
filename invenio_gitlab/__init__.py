@@ -166,6 +166,7 @@ configuration:
 from __future__ import absolute_import, print_function
 
 from .ext import InvenioGitLab
-from .version import __version__
 
-__all__ = ('__version__', 'InvenioGitLab')
+__version__ = "0.2.0"
+
+__all__ = ("__version__", "InvenioGitLab")
